@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <link href="options.css" rel="stylesheet" type="text/css">
+    <title>Options</title>
+  </head>
+
+<dialog id="helpDialog">
+  <p id="helpDialogContents"> </p>
+  <form method="dialog">
+    <menu>
+      <button>Close</button>
+    </menu>
+  </form>
+</dialog>
+
+<dialog id="resetDialog">
+  <p id="resetDialogContents"> </p>
+  <form method="dialog">
+    <menu>
+      <button value="cancel">Cancel</button>
+      <button id="confirmBtn" value="confirm">Confirm</button>
+    </menu>
+  </form>
+</dialog>
+
+
+  <div class="header">Options <span id="updateNotification"> &mdash; Have been updated. &mdash; </span></div>
+  <body>
+    <div class="optionGridContainer">
+
+      <div ></div>
+      <div style="justify-self: end;" class="tableLabel" >Theme:
+      </div>
+      <div class="themeOption optionGridItem">
+	<span style="white-space:nowrap; margin-right: .5vw;">Dark</span>
+	<label class="switch">
+	  <input id="themeSlider" type="checkbox">
+	  <span class="slider round"></span>
+	</label>
+	<span style="white-space:nowrap; margin-left: .5vw">Light</span>
+
+	<img style="margin-left: 1vw;" src="images/help-web-button.png" class="helpButton"
+	     title="The dark theme uses a black background with brown, red, and yellow borders. The light theme uses a grey background with the same borders." />
+	<img src="images/refreshing.png" class="resetButton" data-default="storedTheme"
+	     title="Reset &quot;Theme&quot; to default: Dark"/>
+
+      </div>
+      <div></div>
+
+      <div></div>
+      <div></div>
+
+
+      <div></div>
+      <div style="justify-self: end;" class="tableLabel"> Load More Cutoff: </div>
+      <div class="optionGridItem">
+	<input class="inputOption" id="loadMoreCutoff" type="number" min="1" max="999" />
+	<img style="margin-left: 1vw;" src="images/help-web-button.png" class="helpButton"
+	     title="Beyond this many tabs, history links, or bookmarks, a button to &quot;load more&quot; or &quot;load all&quot; remaining items will be displayed."/>
+	<img src="images/refreshing.png" class="resetButton" data-default="storedDefaultCutoff"
+	     title="Reset the &quot;Load More Cutoff&quot; to default: 100"/>
+      </div>
+      <div></div>
+      <div></div>
+      <div></div>
+
+
+      <div></div>
+      <div class="tableLabel">Show?</div>
+      <div class="tableLabel">Start Collapsed?</div>
+      <div class="tableLabel">Default Columns (1 to 8)</div>
+      <div class="tableLabel">Minimum Rows</div>
+      <div class="tableLabel">Maximum Rows</div>
+
+            
+      <div style="justify-self: end;" class="tableLabel">Tabs</div>
+      <div class="emptyTableField"></div>
+      <div class="optionGridItem">
+	<input class="tabOption" id="startCollapsed" type="checkbox"/>
+	<img src="images/help-web-button.png" class="helpButton"
+	     title="When checked, the contents of the &quot;Tabs/History&quot; frame will start collapsed and will not be visible until the [-] button is pressed."/>
+	<img src="images/refreshing.png" class="resetButton" data-default="tabOption.startCollapsed"
+	     title="Reset &quot;Start Collapsed?&quot; to default: false"/>
+      </div>
+      <div  class="optionGridItem">
+	<input class="tabOption" id="defaultColumns" type="number" value="4" min="1" max="8" />
+	<img src="images/help-web-button.png" class="helpButton"
+	     title="The tabs shown in the &quot;Tabs/History&quot; frame will have this many columns on startup. 1 to 8 columns are allowed inclusively." />
+	<img src="images/refreshing.png" class="resetButton" data-default="tabOption.defaultColumns"
+	     title="Reset &quot;Default Columns&quot; to default: 4"/>
+      </div>
+      <div  class="optionGridItem">
+	<input class="tabOption" id="minRows"        type="number" value="1" min="1" max="999" />
+	<img src="images/help-web-button.png" class="helpButton"
+	     title="The tabs shown in the &quot;Tabs/History&quot; frame will always have at least this many rows." />
+	<img src="images/refreshing.png" class="resetButton" data-default="tabOption.minRows"
+	     title="Reset &quot;Minimum Rows&quot; to default: 1"/>
+      </div>
+      <div  class="optionGridItem">
+	<input class="tabOption" id="maxRows"        type="number" value="9" min="1" max="999" />
+	<img src="images/help-web-button.png" class="helpButton"
+	     title="The tabs shown in the &quot;Tabs/History&quot; frame will have at most this many rows." />
+	<img src="images/refreshing.png" class="resetButton" data-default="tabOption.maxRows"
+	     title="Reset &quot;Maximum Rows&quot; to default: 9"/>
+      </div>
+
+      <div style="justify-self: end;" class="tableLabel">History</div>
+      <div class="emptyTableField"></div>
+      <div class="emptyTableField"></div>
+      <div  class="optionGridItem">
+	<input class="historyOption" id="defaultColumns" type="number" value="4" min="1" max="8" />
+	<img src="images/help-web-button.png" class="helpButton"
+	     title="The history shown in the &quot;Tabs/History&quot; frame will have this many columns on startup. 1 to 8 columns are allowed inclusively." />
+	<img src="images/refreshing.png" class="resetButton" data-default="historyOption.defaultColumns"
+	     title="Reset &quot;Default Columns&quot; to default: 4"/>
+      </div>
+      <div  class="optionGridItem">
+	<input class="historyOption" id="minRows"        type="number" value="1" min="1" max="999" />
+	<img src="images/help-web-button.png" class="helpButton"
+	     title="The history shown in the &quot;Tabs/History&quot; frame will always have at least this many rows." />
+	<img src="images/refreshing.png" class="resetButton" data-default="historyOption.minRows"
+	     title="Reset &quot;Minimum Rows&quot; to default: 1"/>
+      </div>
+      <div  class="optionGridItem">
+	<input class="historyOption" id="maxRows"        type="number" value="9" min="1" max="999" />
+	<img src="images/help-web-button.png" class="helpButton"
+	     title="The history shown in the &quot;Tabs/History&quot; frame will have at most this many rows." />
+	<img src="images/refreshing.png" class="resetButton" data-default="historyOption.maxRows"
+	     title="Reset &quot;Maximum Rows&quot; to default: 9"/>
+      </div>
+
+      <div style="justify-self: end;" class="tableLabel">Bookmarks Bar</div>
+      <div  class="optionGridItem">
+	<input class="barOption" id="show"       type="checkbox"/>
+	<img src="images/help-web-button.png" class="helpButton"
+	     title="If this option is unchecked, the entire &quot;Bookmarks Bar&quot; frame will be hidden." />
+	<img src="images/refreshing.png" class="resetButton" data-default="barOption.show"
+	     title="Reset &quot;Show?&quot; to default: true"/>
+      </div>
+
+      <div  class="optionGridItem">
+	<input class="barOption" id="startCollapsed" type="checkbox"/>
+	<img src="images/help-web-button.png" class="helpButton"
+	     title="When checked, the contents of the &quot;Bookmarks Bar&quot; frame will start collapsed and will not be visible until the [-] button is pressed."/>
+	<img src="images/refreshing.png" class="resetButton" data-default="barOption.startCollapsed"
+	     title="Reset &quot;Start Collapsed&quot; to default: false"/>
+      </div>
+
+      <div  class="optionGridItem">
+	<input class="barOption" id="defaultColumns" type="number" value="5" min="1" max="8" />
+	<img src="images/help-web-button.png" class="helpButton"
+	     title="The bookmarks shown in the &quot;Bookmarks Bar&quot; frame will have this many columns on startup. 1 to 8 columns are allowed inclusively."/>
+	<img src="images/refreshing.png" class="resetButton" data-default="barOption.defaultColumns"
+	     title="Reset &quot;Default Columns&quot; to default: 5"/>
+      </div>
+
+      <div  class="optionGridItem">
+	<input class="barOption" id="minRows"        type="number" value="1" min="1" max="999" />
+	<img src="images/help-web-button.png" class="helpButton"
+	     title="The bookmarks shown in the &quot;Bookmarks Bar&quot; frame will always have at least this many rows."/>
+	<img src="images/refreshing.png" class="resetButton" data-default="barOption.minRows"
+	     title="Reset &quot;Minimum Rows&quot; to default: 1"/>
+      </div>
+
+      <div  class="optionGridItem">
+	<input class="barOption" id="maxRows"        type="number" value="9" min="1" max="999" />
+	<img src="images/help-web-button.png" class="helpButton"
+	     title="The bookmarks shown in the &quot;Bookmarks Bar&quot; frame will have at most this many rows." />
+	<img src="images/refreshing.png" class="resetButton" data-default="barOption.maxRows"
+	     title="Reset &quot;Maximum Rows&quot; to default: 9"/>
+      </div>
+
+
+      <div style="justify-self: end;" class="tableLabel">Other Bookmarks</div>
+      <div  class="optionGridItem">
+	<input class="otherOption" id="show"       type="checkbox"/>
+	<img src="images/help-web-button.png" class="helpButton"
+	     title="If this option is unchecked, the entire &quot;Other Bookmarks&quot; frame will be hidden."/>
+	<img src="images/refreshing.png" class="resetButton" data-default="otherOption.show"
+	     title="Reset &quot;Show?&quot; to default: true"/>
+      </div>
+      <div  class="optionGridItem">
+	<input class="otherOption" id="startCollapsed" type="checkbox"/>
+	<img src="images/help-web-button.png" class="helpButton"
+	     title="When checked, the contents of the &quot;Other Bookmarks&quot; frame will start collapsed and will not be visible until the [-] button is pressed."/>
+	<img src="images/refreshing.png" class="resetButton" data-default="otherOption.startCollapsed"
+	     title="Reset &quot;Start Collapsed&quot; to default: false"/>
+      </div>
+
+      <div  class="optionGridItem">
+	<input class="otherOption" id="defaultColumns" type="number" value="5" min="1" max="8" />
+	<img src="images/help-web-button.png" class="helpButton"
+	     title="The bookmarks shown in the &quot;Other Bookmarks&quot; frame will have this many columns on startup. 1 to 8 columns are allowed inclusively."/>
+	<img src="images/refreshing.png" class="resetButton" data-default="otherOption.defaultColumns"
+	     title="Reset &quot;Default Columns&quot; to default: 5"/>
+      </div>
+      
+      <div  class="optionGridItem">
+	<input class="otherOption" id="minRows"        type="number" value="1" min="1" max="999" />
+	<img src="images/help-web-button.png" class="helpButton"
+	     title="The bookmarks shown in the &quot;Other Bookmarks&quot; frame will always have at least this many rows." />
+	<img src="images/refreshing.png" class="resetButton" data-default="otherOption.minRows"
+	     title="Reset &quot;Minimum Rows&quot; to default: 1"/>
+      </div>
+
+      <div  class="optionGridItem">
+	<input class="otherOption" id="maxRows"        type="number" value="9" min="1" max="999" />
+	<img src="images/help-web-button.png" class="helpButton"
+	     title="The bookmarks shown in the &quot;Other Bookmarks&quot; frame will have at most this many rows." />
+	<img src="images/refreshing.png" class="resetButton" data-default="otherOption.maxRows"
+	     title="Reset &quot;Maximum Rows&quot; to default: 9"/>
+      </div>
+
+
+      <div style="justify-self: end;" class="tableLabel">Reset All</div>
+      <div  class="optionGridItem">
+	<img src="images/help-web-button.png" class="helpButton"
+	     title="Reset all options to default: Theme: Dark, Load More Cutoff: 100, Show?: All Checked,  Start Collapsed?: All Unchecked, Default Columns: &quot;Tabs&quot; & &quot;History&quot;: 4, &quot;Bookmarks Bar&quot; & &quot;Other Bookmarks&quot;: 5, Minimum Rows: All 1, Maximum Rows: All 9  "/>
+	<img src="images/refreshing.png" class="resetButton" data-default="resetAll"
+	     title="Reset all options to default?"/>
+      </div>
+
+
+      
+    </div>
+
+
+   
+    <script src="options.js"></script>    
+  </body>
+
+</html>
