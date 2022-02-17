@@ -25,10 +25,16 @@ body {
 
 html, body, #dndmenu, #my-panel {
     overflow-x: hidden;
-    overflow-y: hidden; /* disabled temporarily for debugging window */
+    /* overflow-y: hidden; */  /* disabled temporarily for debugging window */
     height: 100%;
     width: 100%;
 }
+
+html::-webkit-scrollbar, body::-webkit-scrollbar, #dndmenu::-webkit-scrollbar, #my-panel::-webkit-scrollbar {
+   display: none;
+ 
+}
+
 
 a:link, a:visited, a:link:active, a:visited:active {
   color: white;
