@@ -10,47 +10,47 @@ Pending approval on chrome webstore. See "Build" instructions below.
 
 Click the ![info](/public/images/information.png) icon in the upper right corner of the tabs/history frame for usage information.
 
-#### Select, Copy, Paste and Delete
+### Select, Copy, Paste and Delete
 ![select copy paste](/public/images/help/select-copy-paste.png)
 
 Use CTRL or SHIFT click to select tabs, history, bookmarks or folders. Use Ctrl-A to select all, Ctrl-C to copy, Ctrl-X to cut, and Ctrl-V to paste above the link currently highlighted by the mouse, or into the folder currently highlighted by the mouse. To paste above a folder, instead of within it, right click the folder and select 'Paste (above)' from the popup context menu. Press DEL to delete selected folders or links. Deleting greater then 10 items requires confirmation. There is no undo -- undo has not been implemented yet.
 
-#### Lock Child Folder
+### Lock Child Folder
 ![lock child](/public/images/help/lock-child.png)
 
 Normally closing a parent folder will close all of it's children. Click the lock icon in the top left corner of a child folder, to prevent the child folder from being automatically closed by it's parent.
 
-#### Rollup Titlebar
+### Rollup Titlebar
 ![lock child](/public/images/help/rollup.png)
 
 If a floating window gets in the way, double click it's title bar to toggle hiding it's contents.
 
-#### Bookmark Manager Override
+### Bookmark Manager Override
 ![bookmark manager override](/public/images/help/bookmark-manager-override.png)
 
 Because this extension overrides the chrome bookmark manager, when you right click any bookmark or folder in chrome's native 'Bookmarks Bar' or 'Other Bookmarks' dropdown menu, and select 'Bookmark manager', this extension will open with that item's containing folder already shown. Similarly left clicking any divider which you have inserted via the popup context menu 'Insert divider...' option will do the same thing. Use the context menu 'Show parent folder' option to then show it's parent folder if necessary.
 
-#### Show Parent Folder
+### Show Parent Folder
 ![show parent folder](/public/images/help/show-parent-folder.png)
 
 To find the parent folder of any search result, link, or folder right click and select 'Show Parent Folder' from the popup context menu. Repeat to find all parent folders.
 
-#### History Search
+### History Search
 ![history](/public/images/help/history.png)
 
 Click the 'History: n days' text written on the history tab of the tab/history frame, to reset the number of days to search or display back to 1 day. By default, history is searched 1 day in the past -- use the (+) or (-) buttons to update the search results to look more days in the past.
 
-#### Search
+### Search
 ![search box](/public/images/help/searchbox.png)
 
 To find the parent folder of a search result right click the item and select 'Show Parent Folder' from the popup context menu. Redo this for items in the parent folder to find further parent folders. Any search box can be cleared by pressing ESC or clicking the highlighted portion surrounding the search box. Search terms are combined with boolean 'AND'. All substrings of titles and urls are searched. Tabs, history or any folder can be searched by typing in the top right search box or clicking the magnifying glass icon in a floating window to reveal the search box in the titlebar.
 
-#### Columns, Rows and Snapping
+### Columns, Rows and Snapping
 ![snap window](/public/images/help/snap-window.png)
 
 Clicking the [<] [>] buttons attempts to increase the number of columns by decreasing the number of rows, up to a limit of at most 8 columns. The minimum and maximum number of rows and default columns can be set in the extension's options. Double click the border of a floating window to snap resize the window and show all of it's contents along that axis.
 
-#### Recently Modified
+### Recently Modified
 ![recently modified](/public/images/help/recently-modified.png)
 
 The 'Recently Modified' drop-down list shows a list of most recently modified folders. Deleting, renaming any element or folder, or moving any element out of a folder will not show up in 'Recently Modified'. Only creating a new element or folder, moving an element into a folder, or moving an element within a folder count as modifying the folder. This limitation relies upon the dateGroupModified property of BookmarkTreeNode in the chrome bookmark api.
