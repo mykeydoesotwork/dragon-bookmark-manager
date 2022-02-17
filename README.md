@@ -84,7 +84,7 @@ Icons Used:
 ![magnifying glass](/public/images/magnifying-glass.png) [Search icons created by Those Icons - Flaticon](https://www.flaticon.com/free-icons/search)  
 ![folder](/public/images/folder16.png) [Empty folder icons created by Creative Stall Premium - Flaticon](https://www.flaticon.com/free-icons/empty-folder)  
 ![lock](/public/images/lock.png) [Lock icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/lock)  
-![warning](/public/images/warning128.png) [Error icons created by Vectors Market - Flaticon](https://www.flaticon.com/free-icons/error)  
+:warning: [Error icons created by Vectors Market - Flaticon](https://www.flaticon.com/free-icons/error)  
 
 ## License
 
