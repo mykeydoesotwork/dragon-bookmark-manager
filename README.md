@@ -4,7 +4,7 @@ Bookmark Manager Extension
 
 ## Installation
 
-Download from https://chrome.google.com/webstore/category/extensions.
+Pending approval on chrome webstore. See "Build" instructions below.
 
 ## Usage
 
@@ -44,11 +44,12 @@ Clicking the [<] [>] buttons attempts to increase the number of columns by decre
 The 'Recently Modified' drop-down list shows a list of most recently modified folders. Deleting, renaming any element or folder, or moving any element out of a folder will not show up in 'Recently Modified'. Only creating a new element or folder, moving an element into a folder, or moving an element within a folder count as modifying the folder. This limitation relies upon the dateGroupModified property of BookmarkTreeNode in the chrome bookmark api.
 
 ## Options
-![theme dark light](/public/images/help/theme-dark-light.png)
+![theme dark light](/public/images/help/theme-dark-light.png)  
 Light or Dark Mode: The dark theme uses a black background with brown, red, and yellow borders. The light theme uses a grey background with the same borders.
 
-Default column, row, and startup hide/show options for "Bookmarks Bar" and "Other Bookmarks" folder can also be set in the extension options.
+Default column, row, and startup hide/show options for "Bookmarks Bar" and "Other Bookmarks" folder can be set in the extension options.
 
+You can open the extension options by clicking the ![gear](/public/images/gear-option.png) icon in the upper right corner of the tabs/history frame.
 
 ## Build
 Release Build:
@@ -65,8 +66,8 @@ The figwheel build does not have access to the chrome bookmarks api, and uses a 
 See start of dndmenu.cljs for instructions on how to create this localstorage key. 
 
 ## Credits
-This code was originally based upon Marten Sytema's (Kah0ona) re-dnd: 
-"A configurable drag/drop widget + API for re-frame apps"
+This code was originally based upon Marten Sytema's (Kah0ona) re-dnd:  
+"A configurable drag/drop widget + API for re-frame apps"  
 https://github.com/Kah0ona/re-dnd
 
 Icons Used:  
