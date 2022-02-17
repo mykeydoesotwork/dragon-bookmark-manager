@@ -70,21 +70,21 @@ This code was originally based upon Marten Sytema's (Kah0ona) re-dnd:
 https://github.com/Kah0ona/re-dnd
 
 Icons Used:  
-![cross]("/public/images/close16.png") [Close icons created by Pixel perfect - Flaticon](https://www.flaticon.com/free-icons/close)  
-![info]("/public/images/information.png") [Info icons created by Those Icons - Flaticon](https://www.flaticon.com/free-icons/info)  
-![question mark]("/chrome-dragon-bookmark-manager/images/help-web-button.png") [Question icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/question)  
-![reset]("/chrome-dragon-bookmark-manager/images/refreshing.png") [Refresh icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/refresh)  
-![circle minus]("/public/images/circle-minus.png")[Minus icons created by dmitri13 - Flaticon](https://www.flaticon.com/free-icons/minus)  
-![circle plus]("/public/images/circle-plus.png")[Plus icons created by dmitri13 - Flaticon](https://www.flaticon.com/free-icons/plus)  
-![left chevron]("/public/images/left-chevron.png")[Left arrow icons created by Google - Flaticon](https://www.flaticon.com/free-icons/left-arrow)  
-![right chevron]("/public/images/right-chevron.png") [Right arrow icons created by Google - Flaticon](https://www.flaticon.com/free-icons/right-arrow)  
-![gear]("/public/images/gear-option.png") [Cog icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/cog)  
-![bar]("/public/images/minus.png") [Minus icons created by Google - Flaticon](https://www.flaticon.com/free-icons/minus)  
-![link]("/public/images/link16.png") [Link icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/link)  
-![magnifying glass]("/public/images/magnifying-glass.png") [Search icons created by Those Icons - Flaticon](https://www.flaticon.com/free-icons/search)  
-![folder]("/public/images/folder16.png") [Empty folder icons created by Creative Stall Premium - Flaticon](https://www.flaticon.com/free-icons/empty-folder)  
-![lock]("/public/images/lock.png") [Lock icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/lock)  
-![warning]("/public/images/warning128.png") [Error icons created by Vectors Market - Flaticon](https://www.flaticon.com/free-icons/error)  
+![cross](/public/images/close16.png) [Close icons created by Pixel perfect - Flaticon](https://www.flaticon.com/free-icons/close)  
+![info](/public/images/information.png) [Info icons created by Those Icons - Flaticon](https://www.flaticon.com/free-icons/info)  
+![question mark](/chrome-dragon-bookmark-manager/images/help-web-button.png) [Question icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/question)  
+![reset](/chrome-dragon-bookmark-manager/images/refreshing.png) [Refresh icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/refresh)  
+![circle minus](/public/images/circle-minus.png)[Minus icons created by dmitri13 - Flaticon](https://www.flaticon.com/free-icons/minus)  
+![circle plus](/public/images/circle-plus.png)[Plus icons created by dmitri13 - Flaticon](https://www.flaticon.com/free-icons/plus)  
+![left chevron](/public/images/left-chevron.png)[Left arrow icons created by Google - Flaticon](https://www.flaticon.com/free-icons/left-arrow)  
+![right chevron](/public/images/right-chevron.png) [Right arrow icons created by Google - Flaticon](https://www.flaticon.com/free-icons/right-arrow)  
+![gear](/public/images/gear-option.png) [Cog icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/cog)  
+![bar](/public/images/minus.png) [Minus icons created by Google - Flaticon](https://www.flaticon.com/free-icons/minus)  
+![link](/public/images/link16.png) [Link icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/link)  
+![magnifying glass](/public/images/magnifying-glass.png) [Search icons created by Those Icons - Flaticon](https://www.flaticon.com/free-icons/search)  
+![folder](/public/images/folder16.png) [Empty folder icons created by Creative Stall Premium - Flaticon](https://www.flaticon.com/free-icons/empty-folder)  
+![lock](/public/images/lock.png) [Lock icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/lock)  
+![warning](/public/images/warning128.png) [Error icons created by Vectors Market - Flaticon](https://www.flaticon.com/free-icons/error)  
 
 ## License
 
