@@ -83,6 +83,7 @@ This code was originally based upon Marten Sytema's (Kah0ona) re-dnd:
 https://github.com/Kah0ona/re-dnd
 
 Icons Used:  
+![bookmark](chrome-dragon-bookmark-manager/images/bookmark32.png)[Bookmark icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/bookmark)  
 ![cross](/public/images/close16.png) [Close icons created by Pixel perfect - Flaticon](https://www.flaticon.com/free-icons/close)  
 ![info](/public/images/information.png) [Info icons created by Those Icons - Flaticon](https://www.flaticon.com/free-icons/info)  
 ![question mark](/chrome-dragon-bookmark-manager/images/help-web-button.png) [Question icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/question)  
