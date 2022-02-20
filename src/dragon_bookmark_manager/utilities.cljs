@@ -1119,7 +1119,7 @@
         source-id (:id widget)]
     (cond (= (:type widget) :tablink)
           ;; if it is a :tablinks fetch all selected :tablinks, then create them in destinationDropZoneId
-          (let [get-selected (vec (distinct (conj @(rf/subscribe [:dnd/get-selected :tab-history :tabselected]) source-id)))
+          (let [get-selected (vec (remove #{:anchor} (distinct (conj @(rf/subscribe [:dnd/get-selected :tab-history :tabselected]) source-id))))
                 get-tabs
                 (if (.hasOwnProperty js/chrome "bookmarks")
                   @(rf/subscribe [:dnd/get-tabs])
@@ -1141,7 +1141,7 @@
               (rf/dispatch [:chrome-synch-all-dropzones-to-folderId {:type :updateAll}])))
           (= (:type widget) :historylink)
           ;; if it is a :historylink fetch all selected :historylinks, then create them in destinationDropZoneId
-          (let [get-selected (vec (distinct (conj @(rf/subscribe [:dnd/get-selected :tab-history :historyselected]) source-id)))
+          (let [get-selected (vec (remove #{:anchor} (distinct (conj @(rf/subscribe [:dnd/get-selected :tab-history :historyselected]) source-id))))
                 get-history
                 (if (.hasOwnProperty js/chrome "bookmarks")
                   @(rf/subscribe [:dnd/get-history])
