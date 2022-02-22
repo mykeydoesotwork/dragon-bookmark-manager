@@ -82,8 +82,11 @@ This code was originally based upon Marten Sytema's (Kah0ona) re-dnd:
 "A configurable drag/drop widget + API for re-frame apps"  
 https://github.com/Kah0ona/re-dnd
 
+This code is written in clojurescript primarily using [re-frame](https://github.com/Day8/re-frame),  [reagent](https://github.com/reagent-project/reagent), and some of the [google closure library](https://developers.google.com/closure/library/). 
+
 Icons Used:  
 ![bookmark](chrome-dragon-bookmark-manager/images/bookmark32.png)[Bookmark icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/bookmark)  
+![dragon](/public/images/dragon.png) [Dragon icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/dragon)  
 ![cross](/public/images/close16.png) [Close icons created by Pixel perfect - Flaticon](https://www.flaticon.com/free-icons/close)  
 ![info](/public/images/information.png) [Info icons created by Those Icons - Flaticon](https://www.flaticon.com/free-icons/info)  
 ![question mark](/chrome-dragon-bookmark-manager/images/help-web-button.png) [Question icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/question)  
@@ -99,6 +102,9 @@ Icons Used:
 ![folder](/public/images/folder16.png) [Empty folder icons created by Creative Stall Premium - Flaticon](https://www.flaticon.com/free-icons/empty-folder)  
 ![lock](/public/images/lock.png) [Lock icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/lock)  
 :warning: [Error icons created by Vectors Market - Flaticon](https://www.flaticon.com/free-icons/error)  
+
+## Privacy Policy
+The Dragon Bookmark Extension does not collect any data from the user.
 
 ## License
 
