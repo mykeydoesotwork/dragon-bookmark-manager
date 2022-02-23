@@ -104,7 +104,7 @@ Icons Used:
 :warning: [Error icons created by Vectors Market - Flaticon](https://www.flaticon.com/free-icons/error)  
 
 ## Privacy Policy
-The Dragon Bookmark Extension does not collect any data from the user.
+The "Dragon Bookmark Manager" does not collect any data from usage of the extension and does not attempt to "call home" in any way.
 
 ## License
 
