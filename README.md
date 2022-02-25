@@ -1,10 +1,10 @@
 ﻿# dragon-bookmark-manager
 
-Bookmark Manager Extension
+An explorer-like, drag and drop, bookmark manager with floating menu windows. Written in [clojurescript](https://clojurescript.org),  [re-frame](https://github.com/Day8/re-frame) and [reagent](https://github.com/reagent-project/reagent).
 
 ## Installation
 
-Pending approval on chrome webstore. See "Build" instructions below.
+Install from chrome webstore page at [Dragon Bookmark Manager](https://chrome.google.com/webstore/detail/dragon-bookmark-manager/eobojnedjhmmopieajeokibkkcffmmmb).  See "Build" instructions below, to build unpacked extension.
 
 ## Usage
 
