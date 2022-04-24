@@ -12,10 +12,13 @@ body {
     color: white;
     /* default left and right borders are set to 8px is set 
     to 0 or else menus will clipped left and right by 8px */
-    margin: 8px 0 0 0; 
+    margin: 8px 0 0 0;
+    /* clip overflow to prevent scrolling in x direction, also hides scrollbars in addition to display: none below  */
+    /* overflow-y: hidden is omitted, to allow mouse wheel scrolling with hidden scrollbar (hidden by display: none below) */
+    overflow-x: hidden;
 }
 
-.darkmode {
+.darkMode {
     background-color:black;
 }
 
@@ -23,13 +26,8 @@ body {
     background-color:#444444;
 }
 
-html, body, #dndmenu, #my-panel {
-    overflow-x: hidden;
-    /* overflow-y: hidden; */  /* disabled temporarily for debugging window */
-    height: 100%;
-    width: 100%;
-}
-
+ 
+/* hide scrollbars in addition to overflow hidden above */
 html::-webkit-scrollbar, body::-webkit-scrollbar, #dndmenu::-webkit-scrollbar, #my-panel::-webkit-scrollbar {
    display: none;
  
