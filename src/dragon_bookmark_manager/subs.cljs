@@ -175,3 +175,8 @@
  (fn [db _]
    (get-in db [:dnd/state :clipboard])))
 
+(re-frame/reg-sub
+ :dnd/get-view-titles
+ (fn [db _]
+   (get-in db [:dnd/state :views :view-titles])))
+

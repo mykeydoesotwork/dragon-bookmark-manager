@@ -378,7 +378,7 @@
 (declare appended-container)
 (rf/reg-event-fx
  :chrome-synch-all-dropzones-to-folderId-with-menu
- (fn [{db :db} [_ menu-xyposition show-containing-folder-element-id dropzone-id]]
+ (fn [{db :db} [_ menu-xyposition menu-dimensions show-containing-folder-element-id dropzone-id]]
    (let [folderId (:folderId @(rf/subscribe [:dnd/dragdrop-options dropzone-id]))] 
 
      (chrome-getSubTree-bookmark 
@@ -398,7 +398,7 @@
                         (if (empty? returnVal) '(:folder-has-no-children) returnVal) ])
           (rf/dispatch [:dnd/set-menuOpen-state dropzone-id true])
           (rf/dispatch [ :dnd/set-zindex dropzone-id (gen-next-zindex) ])
-          (rdom/render [Menu title menu-xyposition show-containing-folder-element-id dropzone-id]
+          (rdom/render [Menu title menu-xyposition menu-dimensions show-containing-folder-element-id dropzone-id]
                        (appended-container (.getElementById js/document "my-panel") dropzone-id)))))
      {:db db})))
 
@@ -460,7 +460,7 @@
 ;; their respective folderIds
 (rf/reg-event-db
  :dnd/synch-all-dropzones-to-folderId-with-menu
- (fn [db [_ title menu-xyposition show-containing-folder-element-id dropzone-id]]
+ (fn [db [_ title menu-xyposition menu-dimensions show-containing-folder-element-id dropzone-id]]
    (let [;; synch-dropzone-to-folderId : a dropzone -> a new database
          ;;_ (println "running synch-all-dropzones-to-folderId!")
          synch-dropzone-to-folderId 
@@ -492,7 +492,7 @@
                    newdb))]
      (rf/dispatch [:dnd/set-menuOpen-state dropzone-id true])
      (rf/dispatch [:dnd/set-zindex dropzone-id (gen-next-zindex) ])
-     (rdom/render [Menu title menu-xyposition show-containing-folder-element-id dropzone-id]
+     (rdom/render [Menu title menu-xyposition menu-dimensions show-containing-folder-element-id dropzone-id]
                      (appended-container (.getElementById js/document "my-panel") dropzone-id))
      newdb)))
 
@@ -1159,16 +1159,75 @@
 
 ;; dropzone-id comes from folderid
 ;; this handles window overflow repositioning, if no overflow, then just uses positionState as set by folderbutton, and shows the menu
-(defn set-menu-position-closure [dropzone-id positionState visibilityState show-containing-folder-element-id]
+;defn set-menu-position-closure [dropzone-id positionState visibilityState -- true or false boolean value --]                                
+(defn set-menu-position-closure [dropzone-id positionState dimensions visibilityState show-containing-folder-element-id]
   (fn [comp]
     (let [dropzone-reference (rdom/dom-node comp) ;; r/dom-node: react-class -> HTMLElement 
           menu-reference (.-parentNode dropzone-reference) ]
       ;;; if visible do nothing
       (when (= @visibilityState "hidden")
+        (prn ["from set-menu-position-closure: [dropzone-id @positionState @visibilityState show-containing-folder-element-id] "
+                  [dropzone-id @positionState @visibilityState show-containing-folder-element-id]])
         (let [menuBoundingRectangle (.getBoundingClientRect menu-reference) 
               countNodeList (.-length (.querySelectorAll dropzone-reference ".link-element, .folderbox-element, .blank-element"))]
-          ;; if countNodeList is 0 do nothing
-          (let [my-panelReference (.getElementById js/document "my-panel")
+          ;; if countNodeList is 0 do nothing ;; countNodeList is unused
+          (let [my-panelReference (.getElementById js/document "my-panel") ;; my-panelReference is unused
+                folderbutton (if show-containing-folder-element-id
+                               (.getElementById js/document (str "dropped-element-" show-containing-folder-element-id))
+                               (.getElementById js/document (str "dropped-element-" (dkey->fid dropzone-id))))]
+            ;; If folderbutton is nil, this is because show-folder was not called and has not set show-containing-folder-element-id, when
+            ;; showing a parent folder. And (str "dropped-element-" (dkey->fid dropzone-id)) is also nil because a folderbutton was not
+            ;; clicked to trigger calling set-menu-position-closure. Instead show-folder-wrapper must have been called from
+            ;; recently-modified-dropdown attempting to show a folder which is not currently visible as an html element. In this case ignore
+            ;; x-overflow and just check for y-overflow (which is based on the menucomponent only not any bookmark element) and show the
+            ;; folder with positionState set by show-folder-wrapper to a explicitly safe value.  ie. check for vertical overflow and (reset!
+            ;; visibilityState "visible") below.
+            ;; do not set x direction if dimensions are set by restore-view
+            (when (and folderbutton (not dimensions))
+              ;; if overflow in x direction subtract (+ menuWidth folderbuttonWidth) from "left" of menu
+              (let [folderbuttonBoundingRectangle (.getBoundingClientRect folderbutton)
+                    menuLeftViewport (.-left menuBoundingRectangle)
+                    menuLeft (px-to-int (get-computed-style menu-reference "left"))
+                    ;;(.-offsetWidth menu-reference) returns wrong values for large titlebars 
+                    menuOffsetWidth (+ 8 (.-offsetWidth dropzone-reference)) ;; 8 is for 4px border on either side of dropzone
+                    menuViewportDisplacement (- (.-left menuBoundingRectangle) (.-left folderbuttonBoundingRectangle))
+                    viewportWidth (.-width (.-visualViewport js/window))]
+                (when (< viewportWidth (+ menuLeftViewport menuOffsetWidth)) 
+                  ;;(println "overflow-x has occured")
+                  ;;(setstyle menu-reference "left" (str (- menuLeft menuOffsetWidth menuViewportDisplacement) "px"))
+                  (reset! positionState [(first @positionState) (max 0 (- menuLeft menuOffsetWidth menuViewportDisplacement))]))))
+            ;; do not set y direction if dimensions are set by restor -view
+            (when (not dimensions)
+             (let [menuTop (px-to-int (get-computed-style menu-reference "top"))
+                   menuVPTop (.-top (.getBoundingClientRect menu-reference))
+                   menuOffsetHeight (.-offsetHeight menu-reference)
+                   viewportHeight (.-height (.-visualViewport js/window))
+                   verticalOverflowAmount (- (.-bottom menuBoundingRectangle) viewportHeight)]
+               (when (< viewportHeight (+ menuVPTop menuOffsetHeight))
+                 ;;(println "overflow-y has occured")
+                 ;; 20 is random number to check for why double overflow is occuring
+                 ;;(setstyle menu-reference "top" (str (- menuTop verticalOverflowAmount 20)  "px"))
+                 (reset! positionState [(- menuTop verticalOverflowAmount 20) (second @positionState)])))))
+          ;; if dimensions were passed then set them. dimensions look like ["600px" "400px"]
+          (when dimensions
+           (setstyle dropzone-reference "width" (first dimensions))
+           (setstyle dropzone-reference "height" (second dimensions)))
+          ;; if scrollbars intermittently appear before visible is set there will be a placement error gap
+          ;;(setstyle menu-reference "visibility" "visible")
+          (reset! visibilityState "visible"))))))
+
+#_(defn set-menu-position-closure--oldver-dec15-2022 [dropzone-id positionState visibilityState show-containing-folder-element-id]
+  (fn [comp]
+    (let [dropzone-reference (rdom/dom-node comp) ;; r/dom-node: react-class -> HTMLElement 
+          menu-reference (.-parentNode dropzone-reference) ]
+      ;;; if visible do nothing
+      (when (= @visibilityState "hidden")
+        (prn ["from set-menu-position-closure: [dropzone-id @positionState @visibilityState show-containing-folder-element-id] "
+                  [dropzone-id @positionState @visibilityState show-containing-folder-element-id]])
+        (let [menuBoundingRectangle (.getBoundingClientRect menu-reference) 
+              countNodeList (.-length (.querySelectorAll dropzone-reference ".link-element, .folderbox-element, .blank-element"))]
+          ;; if countNodeList is 0 do nothing ;; countNodeList is unused
+          (let [my-panelReference (.getElementById js/document "my-panel") ;; my-panelReference is unused
                 folderbutton (if show-containing-folder-element-id
                                (.getElementById js/document (str "dropped-element-" show-containing-folder-element-id))
                                (.getElementById js/document (str "dropped-element-" (dkey->fid dropzone-id))))]
@@ -1206,7 +1265,6 @@
           ;;(setstyle menu-reference "visibility" "visible") 
           (reset! visibilityState "visible"))))))
 
-
 (defn changeColumns-floating [menuReference positionState direction]
   (let [panelReference (.getElementById js/document "my-panel")
         menuDomTop (js/parseFloat (get-computed-style menuReference "top"))
@@ -1233,15 +1291,15 @@
 
 
 ;; [dndv/drop-zone dropzone-id false]
-(defn set-position-and-render-dropzone [dropzone-id embedded? changeColumns positionState visibilityState searchText
+(defn set-position-and-render-dropzone [dropzone-id embedded? changeColumns positionState dimensions visibilityState searchText
                                         show-containing-folder-element-id]
   ;; the render function will be called with the same arguments as the outer function, you cannot permute or exclude arguments 
   (r/create-class {:reagent-render  (dndv/drop-zone dropzone-id embedded? changeColumns positionState visibilityState searchText
                                                     show-containing-folder-element-id) ;; ignored by dndv/drop-zone
-                   :component-did-mount (set-menu-position-closure dropzone-id positionState
+                   :component-did-mount (set-menu-position-closure dropzone-id positionState dimensions
                                                                    visibilityState show-containing-folder-element-id)})) 
 
-(defn Menu [title xyposition show-containing-folder-element-id dropzone-id]
+(defn Menu [title xyposition dimensions show-containing-folder-element-id dropzone-id]
   ;; with-let is shorthand for a let .. fn closure which gives each component it's own state. Also allows for an optional finally.
   (let [currIndex (rf/subscribe [:dnd/get-zindex dropzone-id])
         ratom-image (r/atom "images/unlock.png")
@@ -1366,7 +1424,7 @@
                     :padding-right "10px" :padding-left "10px"}} 
            [:img {:src "images/close16.png" :style {:padding "5px"}  }]]] 
          
-         [set-position-and-render-dropzone dropzone-id false changeColumns positionState visibilityState searchText
+         [set-position-and-render-dropzone dropzone-id false changeColumns positionState dimensions visibilityState searchText
           show-containing-folder-element-id]
          
          [:div.resizer-l {:on-mouse-down (fn [e] (resizeMouseDown e dropzone-id 'lBorder)) :on-double-click (dblclick-border s 'lBorder)}]
@@ -1520,8 +1578,8 @@
                                                :z-index 1}])
                               _ (try (if (.hasOwnProperty js/chrome "bookmarks")
                                        ;; title menu-xyposition dropzone-id 
-                                       (rf/dispatch [:chrome-synch-all-dropzones-to-folderId-with-menu menu-xyposition false dropzone-id])
-                                       (rf/dispatch [:dnd/synch-all-dropzones-to-folderId-with-menu title menu-xyposition false dropzone-id]))
+                                       (rf/dispatch [:chrome-synch-all-dropzones-to-folderId-with-menu menu-xyposition nil false dropzone-id])
+                                       (rf/dispatch [:dnd/synch-all-dropzones-to-folderId-with-menu title menu-xyposition nil false dropzone-id]))
                                      ;; tested error => Error Occured:  {:type :custom-arg-error, :message find-id: id was not found}
                                      (catch :default e (println "Error Occured: " e)))]))))))
 
@@ -1778,9 +1836,28 @@
          [:pre (with-out-str  (clojure.pprint/pprint s))]
          )])))
 
-
-
-
+;; views: ({:view-title "basketball clojure", :open-folder-dimensions
+;; ({:folderId "14", :top "20px", :left "37px", :width "879px", :height "137px"}
+;;  {:folderId "17", :top "229px", :left "36px", :width "879px", :height "169px"})} nil nil nil nil nil)
+(defn ViewBar []
+  (let [_ (rf/dispatch [:dnd/initialize-view-titles])
+        indexed-views (rf/subscribe [:dnd/get-view-titles])]
+   (fn []
+     (when @indexed-views
+      [:div.ViewBar 
+       (for [[view-number view-title] @indexed-views]
+         ^{:key (random-uuid)}
+         [:<>
+          [:div.ViewBarButtonContainer 
+           [:div.ViewBarButton.Left {:title "save view" :on-click #(dndc/resetSaveViewDialog view-number)} ]
+           [:div.ViewBarButton.Right {:title "restore view"
+                                      :on-click #(try (dndc/restore-view view-number)
+                                                      (println ["restoring view: " view-title view-number])
+                                                      (catch :default e (run-fade-alert (str "this view is empty"))))}]
+           [:img {:src "images/diskette.png" :style {:vertical-align "middle" :padding-left "4px" :padding-right "4px"} }]
+           [:span.ViewButtonTitle (if view-title view-title (str "VIEW-" view-number))]
+           [:img {:src "images/share.png" :style {:vertical-align "middle" :padding-left "4px" :padding-right "4px"} }]]
+          [:div {:style {:flex .25}} ]])]))))
 
 
 (defn my-panel
@@ -1798,6 +1875,8 @@
                             (clear-all-selections-except)))
               :style {:position "relative" }}
 
+       [ViewBar]
+       [:div  {:style { :margin-bottom "10px" }}]
      
        [EmbeddedMenuTabs]
        [:div  {:style { :margin-bottom "20px" }}]

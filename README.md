@@ -10,6 +10,11 @@ Install from chrome webstore page at [Dragon Bookmark Manager](https://chrome.go
 
 Click the ![info](/public/images/information.png) icon in the upper right corner of the tabs/history frame for usage information.
 
+### Popup Menu and Views
+![popup](/public/images/help/popup.png)
+
+Click "Bookmark Manager" to open the bookmark manager. Any menu item under "Recently Modified" will run the bookmark manager, with that folder already open. A "View" is a layout of folder windows which you can save and restore. To save a view; click the red, left hand side of a view button. To restore a view; click the green, right hand side of a view button. Any item under "Views" of the popup menu will run the bookmark manager and restore that view of folders.
+
 ### Select, Copy, Paste and Delete
 ![select copy paste](/public/images/help/select-copy-paste.png)
 
@@ -102,6 +107,8 @@ Icons Used:
 ![folder](/public/images/folder16.png) [Empty folder icons created by Creative Stall Premium - Flaticon](https://www.flaticon.com/free-icons/empty-folder)  
 ![lock](/public/images/lock.png) [Lock icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/lock)  
 :warning: [Error icons created by Vectors Market - Flaticon](https://www.flaticon.com/free-icons/error)  
+[Viewbar save icons (diskette) created by Yogi Aprelliyanto - Flaticon](https://www.flaticon.com/free-icons/save)<br/>
+[Viewbar share icons (open) created by IconKanan - Flaticon](https://www.flaticon.com/free-icons/share)
 
 ## Privacy Policy
 The "Dragon Bookmark Manager" does not collect any data from usage of the extension and does not attempt to "call home" in any way.

@@ -17,7 +17,8 @@
    [dragon-bookmark-manager.utilities :refer [fid->dkey dkey->fid setattrib setstyle run-fade-alert find-id map-vec-zipper chrome-update-bookmark
                                               chrome-getSubTree-bookmark chrome-move-bookmark-selected-wrapper stub-move-bookmark get-all-subfolders
                                               get-property onevent-dispatch-refresh-fnhandle clear-all-selections-except clear-all-selections-except-async
-                                              destroymenu getstyle fetch-all-selected defaultCutoffDropzoneElements]])
+                                              destroymenu getstyle fetch-all-selected defaultCutoffDropzoneElements get-computed-style
+                                              px-to-int find-id-no-throw]])
   (:require-macros [dragon-bookmark-manager.macros :as macros]))
 
 
@@ -190,11 +191,11 @@
 
            ;;--- (From: dndmenu.cljs) ---
            ;; --- :chrome-synch-all-dropzones-to-folderId-with-menu (fn [{db :db} [_ menu-xyposition show-containing-folder-element-id dropzone-id]
-           (rf/dispatch [:chrome-synch-all-dropzones-to-folderId-with-menu menu-xyposition (:id rightClickedElement) parentDropzone])
+           (rf/dispatch [:chrome-synch-all-dropzones-to-folderId-with-menu menu-xyposition nil (:id rightClickedElement) parentDropzone])
            ;; --- (From: dndmenu.cljs) ---
            ;;  :dnd/synch-all-dropzones-to-folderId-with-menu [_ title menu-xyposition show-containing-folder-element-id dropzone-id]
            (rf/dispatch [:dnd/synch-all-dropzones-to-folderId-with-menu (find-title-from-id (dkey->fid parentDropzone))  
-                         menu-xyposition (:id rightClickedElement) parentDropzone]))
+                         menu-xyposition nil (:id rightClickedElement) parentDropzone]))
          ;; tested error => Error Occured:  {:type :custom-arg-error, :message find-id: id was not found}
          (catch :default e (println "Error Occured: " e)))))
 
@@ -210,13 +211,17 @@
       (folder-already-shown-error-msg folderId)      
       (show-folder (fid->dkey folderId) nil [ypos xpos]))))
 
-
+(declare restore-view)
 ;; the paramId is always a folder id or the parent id of a link, or nil
 (rf/reg-event-fx
  :dnd/show-folder-from-query-parm
  (fn [_ _]
-   (let [paramId (.get (js/URLSearchParams. (.-search (js/URL. (.toString js/window.location)))) "id")]
-     (when paramId (show-folder-wrapper paramId))
+   (let [paramId (.get (js/URLSearchParams. (.-search (js/URL. (.toString js/window.location)))) "id")
+         paramView (.get (js/URLSearchParams. (.-search (js/URL. (.toString js/window.location)))) "view")]
+     (cond paramId (show-folder-wrapper paramId)
+           paramView (try (restore-view (js/parseInt paramView))
+                          (catch :default e (run-fade-alert (str "this view is empty"))))
+           :else :do-nothing)
      {:fx []})))
  
 
@@ -1010,12 +1015,6 @@
 (.addEventListener (.getElement folder-move-submenu-container) "click" #(.stopPropagation %))
 
 
-
-
-
-
-
-
 ;; << confirmation dialog >>
 ;; confirmDialog -----------------------------------------------------------------------------------------------------------
 
@@ -1438,6 +1437,12 @@
   "div" #js { "style" #js {"overflow-y" "auto" "max-height" "50vh"}}
   (goog.html.SafeHtml.create "div" #js {"class" "helpDialogGrid"}
                              (goog.html.SafeHtml.concat
+                              (goog.html.SafeHtml.create "div" #js { "style" #js  {"text-shadow" "2px 2px 5px black"}} "Popup Menu and Views")
+                              (goog.html.SafeHtml.create "div" #js {} "Click 'Bookmark Manager' to open the bookmark manager. Any menu item under 'Recently Modified' will run the bookmark manager, with that folder already open. A 'View' is a layout of folder windows which you can save and restore. To save a view; click the red, left hand side of a view button. To restore a view; click the green, right hand side of a view button. Any item under 'Views' of the popup menu will run the bookmark manager and restore that view of folders.")
+
+                              (goog.html.SafeHtml.create "div" #js {} )
+                              (goog.html.SafeHtml.create "div" #js {} (goog.html.SafeHtml.create "img" #js {"src" "images/help/popup.png"} ))
+
                               (goog.html.SafeHtml.create "div" #js {}
                                                          (goog.html.SafeHtml.concat
                                                           (goog.html.SafeHtml.create "p" #js { "style" #js  {"margin-top" "0"
@@ -1716,5 +1721,165 @@
 (goog.events.listen link-context-menu LINKEVENTS linkDispatchMenuItemfn) 
 
 
+;; << saveViewDialog dialog >>
+;; saveViewDialog -----------------------------------------------------------------------------------------------------------
+;; -*** restore-view: localstorage json serialization views, view-number integer -> show windows with correct position and sizes
+
+;; folder-position-list:
+;; [["clojure", 14 [100 100] ["500px" "400px"]] ["entAUD", 32 [100 200] ["600px" "500px"]] ["music" 42  [100 300] ["700px" "600px"]]]
+;; open-folder-dimensions:
+;; ({:folderId "99990032", :top "117px", :left "974px", :width "460px", :height "297px"}
+;;  {:folderId "14", :top "119px", :left "5px", :width "460px", :height "115px"}
+;;  {:folderId "32", :top "117px", :left "974px", :width "460px", :height "297px"}
+;;  {:folderId "42", :top "28px", :left "493px", :width "460px", :height "572.797px"})
+
+(defn remove-invalid-folders [open-folder-dimensions]
+  (let [db (rf/subscribe [:dnd/db])
+        bookmark-atom (get-in @db [:dnd/state :bookmark-atom])]
+    (filter #(find-id-no-throw (map-vec-zipper bookmark-atom) (:folderId %)) open-folder-dimensions)))
+
+(defn remove-open-folders [open-folder-dimensions]
+  (let [current-dropzone-options @(rf/subscribe [:dnd/dropzone-options])
+        open-menu-dropzones (keys (into {} (filter #(= (:menuOpen (second %)) true) current-dropzone-options)))
+        open-menu-ids  (set (map dkey->fid open-menu-dropzones))]
+    (remove (comp open-menu-ids :folderId) open-folder-dimensions)))
+
+(defn filter-open-or-invalid-folders [open-folder-dimensions]
+  (if (.hasOwnProperty js/chrome "bookmarks") (remove-open-folders open-folder-dimensions)
+      (remove-open-folders (remove-invalid-folders open-folder-dimensions))))
+
+(defn restore-view [view-number]
+  ;; localstorage view-1: {:view-title "VIEW 1", :open-folder-dimensions
+  ;; '({:folderId "32", :top "119px", :left "5px", :width "460px", :height "115px"}
+  ;;   {:folderId "17", :top "117px", :left "974px", :width "460px", :height "297px"}
+  ;;   {:folderId "22", :top "28px", :left "493px", :width "460px", :height "572.797px"})}
+  ;; if view-? is nil in localstorage or is a map with no :open-folder-dimensions throw error:
+  {:pre [(seq (:open-folder-dimensions (cljs.reader/read-string (js/localStorage.getItem (str "view-" view-number)))))]} 
+  ;; for each folder that in folder-posiion-list that exists
+  ;; cond folder-exists-and-open? ignore it, cond :else (folder is closed and exists or does not exist) overwrite it:
+  ;; initialize the dropzone
+  ;; populate the dropzone contents and set menu-xyposition with:
+  ;; (rf/dispatch [:chrome-synch-all-dropzones-to-folderId-with-menu menu-xyposition (:id rightClickedElement) parentDropzone])
+  ;; or 
+  ;; (rf/dispatch [:dnd/synch-all-dropzones-to-folderId-with-menu (find-title-from-id (dkey->fid parentDropzone)) menu-xyposition (:id rightClickedElement) parentDropzone])
+
+  (let [view (cljs.reader/read-string (js/localStorage.getItem (str "view-" view-number)))
+        open-folder-dimensions (:open-folder-dimensions view)]
+    (doseq [{folderId :folderId top :top left :left width :width height :height}
+            (filter-open-or-invalid-folders open-folder-dimensions)]
+     (let [folder-title (str folderId)
+           folder-dropzone-key (fid->dkey folderId)]
+       (rf/dispatch [:dnd/initialize-drop-zone
+                     folder-dropzone-key ;; this is the dropzone-id
+                     ;; options
+                     {:folderId folderId
+                      :pinned false
+                      :menuOpen false
+                      :collapsedStartupToggle false
+                      :cutoffDropzoneElements defaultCutoffDropzoneElements
+                      :selected []
+                      :z-index 1}])
+
+       ;; position is: [yaxis xaxis]
+       (try (if (.hasOwnProperty js/chrome "bookmarks")
+              (rf/dispatch [:chrome-synch-all-dropzones-to-folderId-with-menu [(js/parseInt top) (js/parseInt left)] [width height] false folder-dropzone-key])
+              (rf/dispatch [:dnd/synch-all-dropzones-to-folderId-with-menu folder-title [(js/parseInt top) (js/parseInt left)] [width height] false folder-dropzone-key]))
+            ;; tested error => Error Occured:  {:type :custom-arg-error, :message find-id: id was not found}
+            (catch :default e (println "Error Occured: " e)))))))
+
+;; -*** save-view: {:view-title string, ({:folder id :top px :left px :width px :height px} ...) -> localstorage json serialization views
+
+(defn get-all-open-folders []
+  (let [current-dropzone-options @(rf/subscribe [:dnd/dropzone-options])
+        open-menu-dropzones (keys (into {} (filter #(= (:menuOpen (second %)) true) current-dropzone-options)))]
+    open-menu-dropzones))
+
+(defn dropzone->folder-data [dropzone-id]
+  (let [dropzoneElement (.querySelector js/document (str "#drop-zone-" (name dropzone-id)))
+        menuElement (.-parentNode dropzoneElement)
+        top (get-computed-style menuElement "top") 
+        left (get-computed-style menuElement "left")
+
+        width (get-computed-style dropzoneElement "width" )
+        height (get-computed-style dropzoneElement "height" )
+
+        
+        ;;getstyle (fn [e x] (gobj/get (gobj/get e "style") x)) 
+        minWidth (get-computed-style dropzoneElement "min-width")
+        minHeight (get-computed-style dropzoneElement "min-height")]
+
+    ;;[top left width height minWidth minHeight]
+    ;; ({:folder id :top px :left px :width px :height px} ...)
+    {:folderId (dkey->fid dropzone-id) :top top :left left
+     :width (if (> (px-to-int minWidth) (px-to-int width)) minWidth width)
+     :height (if (> (px-to-int minHeight) (px-to-int height)) minHeight height)}))
+
+;; save-view
+;; ps: retrieve view-number clicked, all currently open folders:  id, size, positions, dimensions and save them to localstorage
+;; view-number, integer
+;; all-open-folders: (:dropzone-1 :dropzone-2 :dropzone-17)
+;; open-folder-dimensions: all-open-folders -> ({:folder id :top px :left px :width px :height px} ...)
+;;(save-view 1) ;;=> ;;{:view-title "VIEW 1", :open-folder-dimensions ({:folderId "14", :top "221px", :left "252px", :width "460px", :height "233px"})}
+(defn save-view [view-number view-title]
+  (let [all-open-folders (get-all-open-folders) ;; (see restore-view)
+        ;; open-folder-dimensions: ({:folderId "14", :top "221px", :left "252px", :width "460px", :height "233px"} ...)
+        open-folder-dimensions (map dropzone->folder-data (remove #{:dropzone-1 :dropzone-2} all-open-folders))]
+    (.setItem js/localStorage (str "view-" view-number) {:view-title view-title :open-folder-dimensions open-folder-dimensions})))
+
+;; saveViewDialog ---------------------------------------------
+
+(def saveViewDialog (new goog.ui.Dialog nil true))
+(def selectedViewNumber (r/atom 0))
+
+(.setTitle saveViewDialog "Save View")
+
+
+;; fetch localstorage view-(view-number) and extract view-title or default set it to "VIEW (view-number)"
+;; set default input value to this view-title
+;; when save button is clicked call resetSaveViewDialog, and (.setVisible saveViewDialog true)
+(defn resetSaveViewDialog [view-number]
+  (reset! selectedViewNumber view-number)
+  (.setSafeHtmlContent
+   saveViewDialog
+   (let [thirdOfScreen (int (* (.-innerWidth js/window) 0.3))
+         view (cljs.reader/read-string (js/localStorage.getItem (str "view-" view-number)))
+         view-title (if (nil? (:view-title view)) (str "VIEW-" view-number) (:view-title view))]
+     (goog.html.SafeHtml.concat
+      (goog.html.SafeHtml.create "label" #js {"for" "newfolder" "style" #js {"font-size" ".625rem" "font-weight" "500"}} "Name")
+      (goog.html.SafeHtml.create "div" #js {"class" "flexbox"}
+                                 (goog.html.SafeHtml.create "div" #js {"class" "underline"}
+                                                            (goog.html.SafeHtml.create
+                                                             "input" #js {"id" "newfolder" "class" "inputDialog" "type" "text" "value" view-title
+                                                                          "style" #js {"width" (str thirdOfScreen "px")}} nil))))))
+  (.setVisible saveViewDialog true))
+
+(.setButtonSet saveViewDialog (doto (new goog.ui.Dialog.ButtonSet)
+                         (.addButton #js {"caption" "Cancel" "key" "cancel"} false true)
+                         (.addButton #js {"caption" "Save" "key" "save"} true false)))
+
+(.setHasTitleCloseButton saveViewDialog false)
+
+
+(goog.events.listen saveViewDialog goog.ui.Dialog.EventType.SELECT
+                    (fn [e] (let [inputValue (.-value (.querySelector (.getElement saveViewDialog) "input.inputDialog"))
+                                  clickedButton (.-key e)]
+                              (when (= clickedButton "save")
+                                (save-view @selectedViewNumber inputValue)
+                                (rf/dispatch [:dnd/update-view-title @selectedViewNumber inputValue])
+                                (run-fade-alert "view saved")
+                                (println ["inputValue: " inputValue "@selectedViewNumber: " @selectedViewNumber]))
+                              (setattrib (.querySelector (.getElement saveViewDialog) "input.inputDialog")  "value" ""))))
+
+
+(goog.events.listen saveViewDialog goog.ui.Dialog.EventType.AFTER_SHOW
+                    (fn [e] 
+                      (.addEventListener (.querySelector (.getElement saveViewDialog) "input.inputDialog") "focus" add-underline)
+                      (.addEventListener (.querySelector (.getElement saveViewDialog) "input.inputDialog") "blur" remove-underline)
+                      (.focus (.querySelector (.getElement saveViewDialog) "input.inputDialog"))))
+
+(goog.events.listen saveViewDialog goog.ui.Dialog.EventType.HIDE
+                    (fn [e]
+                      (.removeEventListener (.querySelector (.getElement saveViewDialog) "input.inputDialog") "focus" add-underline)
+                      (.removeEventListener (.querySelector (.getElement saveViewDialog) "input.inputDialog") "blur" remove-underline)))
 
 

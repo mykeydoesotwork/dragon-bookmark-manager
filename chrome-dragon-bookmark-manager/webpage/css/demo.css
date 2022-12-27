@@ -33,6 +33,57 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, #dndmenu::-webkit-scrollbar, #
  
 }
 
+.ViewBar {
+    background: rgba(175, 4, 4, .5);
+    display: flex;
+    margin: auto;
+    width: 90vw;
+    border: 2px solid white;
+    justify-content: space-evenly;
+}
+
+.ViewBarButtonContainer {
+    background-color: #840a01;
+    position: relative;
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ViewBarButton {
+    box-sizing: border-box;
+    width: 50%;
+    height: 100%;
+    position: absolute;
+    cursor: pointer;
+}
+
+
+.Left {
+    left: 0;
+    background: rgba(225, 225, 225, .1);
+}
+
+.Left:hover {
+    background: rgba(255, 0, 0, .5);
+}
+
+.Right {
+    right: 0;
+    background: rgba(225, 225, 225, .3);
+}
+
+.Right:hover {
+    background: rgba(0, 255, 0, .5);
+}
+
+.ViewButtonTitle {
+    max-width: 9vw;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
 
 a:link, a:visited, a:link:active, a:visited:active {
   color: white;

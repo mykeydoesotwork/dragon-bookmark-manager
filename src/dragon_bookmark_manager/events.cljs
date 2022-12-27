@@ -459,4 +459,50 @@
    (if (verify-option-entry db id)
      (assoc-in db [:dnd/state :drop-zone-options id :z-index] num) db)))
   
+(re-frame/reg-event-db
+ :dnd/initialize-view-titles
+ (fn
+   ([db [_]]
+    (let [views (for [view-key (map #(str "view-" %) (range 1 7))]
+                  (if-let [view (try (cljs.reader/read-string (js/localStorage.getItem view-key))
+                                     (catch :default e ;; catch malformed view values
+                                       (.setItem js/localStorage view-key {:view-title (clojure.string/upper-case view-key)
+                                                          :open-folder-dimensions '()})
+                                       {:view-title (clojure.string/upper-case view-key) :open-folder-dimensions '()}))]
+                    view
+                    (do ;; if the view is missing, add a default one to localstorage, and the appdb
+                      (.setItem js/localStorage view-key {:view-title (clojure.string/upper-case view-key)
+                                                          :open-folder-dimensions '()})
+                      {:view-title (clojure.string/upper-case view-key) :open-folder-dimensions '()})))
+          ;; => ({:view-title "VIEW-1", :open-folder-dimensions ()} {:view-title "42 32", :open-folder-dimensions ()} {:view-title "cfebrk"...}...)
+          indexed-views (map-indexed #(vector (inc %1) %2) views)
+          ;; => ([1 {:view-title "VIEW-1", :open-folder-dimensions ()}] [2 {:view-title "42 32", :open-folder-dimensions ()}] [3 ...] ...)
+          view-titles (for [[view-number {view-title :view-title}] indexed-views] [view-number view-title])]
+      (assoc-in db [:dnd/state :views :view-titles] view-titles)))))
 
+(re-frame/reg-event-db
+ :dnd/update-view-title 
+ (fn
+   ([db [_ view-number view-title]]
+    (let [view-number (min 6 (max 1 view-number) view-number)
+          views (for [view-key (map #(str "view-" %) (range 1 7))]
+                  (if-let [view (cljs.reader/read-string (js/localStorage.getItem view-key))]
+                    view
+                    (do ;; if the view is missing, add a default one to localstorage, and the appdb
+                      (.setItem js/localStorage view-key {:view-title (clojure.string/upper-case view-key)
+                                                          :open-folder-dimensions '()})
+                      {:view-title (clojure.string/upper-case view-key) :open-folder-dimensions '()})))
+          ;; => ({:view-title "VIEW-1", :open-folder-dimensions ()} {:view-title "42 32", :open-folder-dimensions ()} {:view-title "cfebrk"...}...)
+          indexed-views (map-indexed #(vector (inc %1) %2) views)
+          ;; => ([1 {:view-title "VIEW-1", :open-folder-dimensions ()}] [2 {:view-title "42 32", :open-folder-dimensions ()}] [3 ...] ...)
+          view-titles (for [[view-number {view-title :view-title}] indexed-views] [view-number view-title])
+          ;; => ([1 "VIEW-1"] [2 "42 32"] [3 "cfebrk"] [4 "VIEW-4"] [5 "VIEW-5"] [6 nil])
+          ;; set default VIEW-? if none found
+          view (if-let [not-nil (nth views (dec view-number))] not-nil 
+                       {:view-title (str "VIEW-" view-number) :open-folder-dimensions '()})
+          ;; view-number=3 => {:view-title "cfebrk", :open-folder-dimensions ()} ;; assoc only works on vecs, lists are linked
+          update-view-titles (assoc (vec view-titles) (dec view-number) [view-number view-title])]
+      (.setItem js/localStorage (str "view-" view-number) {:view-title view-title
+                                                           ;; in case view does not exist, prevent nil in map
+                                                           :open-folder-dimensions (if-let [newview (:open-folder-dimensions view)] newview '())})
+      (assoc-in db [:dnd/state :views :view-titles] update-view-titles)))))

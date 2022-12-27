@@ -368,6 +368,14 @@
 #_(try (find-id (map-vec-zipper bkmrks) "2068")
        (catch :default e (println "Error Occured: " e)))
 
+;; find-id-no-throw returns the node contents or nil if not found. find-id returns a zipper node whose return value must be read with zip/node.
+(defn find-id-no-throw [zipper bookmarkId] {:pre [(string? bookmarkId)]}
+  (let [find-id-inner (fn [loc]
+                        (cond (= (:id (zip/node loc)) bookmarkId) bookmarkId
+                              (zip/end? loc) nil
+                              :else (recur (zip/next loc))))]
+    (find-id-inner zipper)))
+
 
 (defn insert-child-and-reindex-array [childArray id parentId index title url dateAdded dateGroupModified hasKids]
   (let [indexVerified (cond (nil? index) (count childArray) 

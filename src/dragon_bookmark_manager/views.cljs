@@ -6,11 +6,11 @@
    [clojure.string]
    [clojure.pprint]
    [dragon-bookmark-manager.utilities :refer [fid->dkey dkey->fid getstyle subfolder? zip-walk-closure get-all-subfolders  
-                                              chrome-getSubTree-bookmark recursive-drop-dispatch-multiple
+                                              chrome-getSubTree-bookmark recursive-drop-dispatch-multiple find-id-no-throw
                                               get-dz-element zip-walk map-vec-zipper px-to-int setstyle setattrib get-property
                                               get-computed-style edge-overlay-ondrop center-overlay-ondrop link-overlay 
                                               delta-out delta-out2 lastZIndex gen-next-zindex clear-all-selections-except
-                                              fetch-all-selected embeddedMenuConfiguration themeColor]]
+                                              fetch-all-selected embeddedMenuConfiguration themeColor defaultCutoffDropzoneElements]]
    [dragon-bookmark-manager.events :as dnd]
    [dragon-bookmark-manager.contextmenu :as dndc]))
 
@@ -986,7 +986,8 @@
           :on-context-menu (fn [e] (.preventDefault e)) ;; disable chrome's context menu
           
           :on-click #(let [ targetClass (.-className (.-target %))]
-                       
+                       ;; set z-index of menu
+                       (rf/dispatch [ :dnd/set-zindex id (gen-next-zindex) ])
                        (cond (= targetClass "drop-zone-embedded") (clear-all-selections-except)
                              (= targetClass "drop-zone-floating") (clear-all-selections-except)
                              (= targetClass "dummy-element") (clear-all-selections-except)))} 

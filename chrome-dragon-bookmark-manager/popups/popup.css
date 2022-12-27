@@ -1,0 +1,82 @@
+body {
+    font-family: Segoe UI, sans-serif;
+    font-size: 12pt;
+    cursor: pointer;
+    background-color: #e6e6e6;
+}
+
+.menuContainer{
+/* Chrome extension popups can have a maximum height of 600px and maximum width of 800px. */
+    width: 300px;
+
+}
+
+/* hrule solution from https://stackoverflow.com/a/5214204 */
+.menuHeader {
+    white-space: nowrap;
+    display: flex;
+    justify-content: center;
+}
+
+.menuHeader > h3 {
+   width: 100%; 
+   text-align: center; 
+   border-bottom: 1px solid #000; 
+   line-height: 0.05em;
+   margin: 15px 0 15px; 
+} 
+
+.menuHeader > h3 > span { 
+    /* white background is necessary to prevent strike through of text */ 
+    background: #e6e6e6;
+    padding:0 10px; 
+}
+
+.menuItem {
+    display: flex;
+    align-items: center;
+    gap: 10px
+}
+
+.menuItem:hover{
+    background-color: #ff9100;
+}
+
+.runApp {
+    justify-content: center;
+    gap: 10px
+}
+
+
+
+.menuItem > span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.menuItem > img {
+    flex-basis: content;
+    
+}
+
+
+/* .header { */
+/*     display: flex; */
+/*     justify-content: center; */
+/*     text-shadow: 2px 2px 4px black; */
+/*     font-size: 3vw; */
+/*     margin-top: 3vh; */
+/*     margin-bottom: 3vh; */
+/* } */
+
+/* .tableLabel { */
+/*     /\* text-decoration-line: underline; *\/ */
+/*     align-self: center; */
+/*     justify-self: center; */
+/*     font-variant: small-caps; */
+/*     font-weight: bold; */
+/*     white-space:nowrap; */
+/* } */
+
+
