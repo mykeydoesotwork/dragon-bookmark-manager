@@ -1114,7 +1114,7 @@
 
        ;; Ensure :cutoffDropzoneElements defaultCutoffDropzoneElements exists before dropzone is mounted
        (when @(rf/subscribe [:dnd/dragdrop-options dropzone-id])
-         [dndv/drop-zone dropzone-id true changeColumns nil nil searchText false])])))
+         [dndv/drop-zone dropzone-id true changeColumns nil nil nil searchText false])])))
 
 
 
@@ -1294,7 +1294,7 @@
 (defn set-position-and-render-dropzone [dropzone-id embedded? changeColumns positionState dimensions visibilityState searchText
                                         show-containing-folder-element-id]
   ;; the render function will be called with the same arguments as the outer function, you cannot permute or exclude arguments 
-  (r/create-class {:reagent-render  (dndv/drop-zone dropzone-id embedded? changeColumns positionState visibilityState searchText
+  (r/create-class {:reagent-render  (dndv/drop-zone dropzone-id embedded? changeColumns positionState dimensions visibilityState searchText
                                                     show-containing-folder-element-id) ;; ignored by dndv/drop-zone
                    :component-did-mount (set-menu-position-closure dropzone-id positionState dimensions
                                                                    visibilityState show-containing-folder-element-id)})) 

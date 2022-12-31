@@ -803,7 +803,7 @@
 
 ;; see: \bookmarkext-clojurescript-notes\example-dropzone-component.cljs for example walkthrough
 (defn drop-zone 
-  [id embedded? changeColumns positionState visibilityState searchText show-containing-folder-element-id]
+  [id embedded? changeColumns positionState dimensions visibilityState searchText show-containing-folder-element-id]
   ;; show-containing-folder-element-id is ignored but necessary as this is the render function for
   ;; set-position-and-render-dropzone in Menu component
   ;; id is a key of the form :dropzone-26
@@ -845,7 +845,7 @@
                                                                  prevSmallestFound (first possibleColumnsEmbeddedArray)))]
 
     
-    (fn [id embedded? changeColumns positionState visibilityState searchText]
+    (fn [id embedded? changeColumns positionState dimensions visibilityState searchText]
       (let [dropped-elements (take @cutoffDropzoneElements @(rf/subscribe [:dnd/dropped-elements id])) 
 
             fetchMenuFrame (when (:componentRef @s) (.closest (:componentRef @s) "div[id^='menu-dropzone']"))
