@@ -271,7 +271,10 @@
                                                   {:type :blank :id "blank-element1" :parentId "dropzone-empty"})])
                         (= 0 (count searchResult))
                         (re-frame/dispatch [:dnd/reset-tab-history tabs-or-history '(:search-not-found)])
-                        :else (re-frame/dispatch [:dnd/reset-tab-history tabs-or-history searchResult])))))))))
+                        :else (re-frame/dispatch [:dnd/reset-tab-history tabs-or-history searchResult])))
+                   )))
+      
+      )))
 
 
 ;; << set state events >>
@@ -363,6 +366,11 @@
        (-> (assoc-in db [:dnd/state :clipboard :rightClicked] rightClicked)
            (assoc-in [:dnd/state :clipboard :selected] selected)))))
 
+;; usage: (rf/dispatch [:dnd/initialize-or-update-tooltip {:title "" :url "" :visible "visible"} ])
+(re-frame/reg-event-db
+ :dnd/initialize-or-update-tooltip
+ (fn [db [_ tooltip-map]]
+   (assoc-in db [:dnd/state :tooltip] tooltip-map)))
 
 
 ;; << drop-zone-options, modifying events >>

@@ -1,7 +1,7 @@
 {
     "name": "Dragon Bookmark Manager",
-    "version": "0.0.0.2",
-    "description": "Drag and drop bookmark explorer, with floating folder windows and views",
+    "version": "0.0.0.3",
+    "description": "Drag and drop bookmark manager, with floating folder windows and views",
     "permissions": ["bookmarks", "tabs", "history"],
     "options_page": "options.html",
     "chrome_url_overrides" : {"bookmarks": "webpage/index.html"},

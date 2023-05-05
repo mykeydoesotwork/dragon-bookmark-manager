@@ -19,6 +19,7 @@
    [dragon-bookmark-manager.views :as dndv]
    [dragon-bookmark-manager.contextmenu :as dndc]
    [goog.object :as gobj]
+   [goog.dom.classlist :as gc]
    [cljs.reader]
    [clojure.pprint]
    [clojure.zip :as zip])
@@ -41,7 +42,6 @@
 #_(.. js/chrome -bookmarks (getSubTree "0"
 				       #(do (js/console.log "getSubTree returns:")
 					    (prn (js->clj % :keywordize-keys true)))))
-
 
 ;; << setup events, appdb tab, history and keypress >>
 
@@ -191,7 +191,8 @@
 ;; initialize the clipboard
 (rf/dispatch [:dnd/initialize-or-update-clipboard {:rightClicked nil :selected nil}])
 
-
+;; initialize tooltips
+(rf/dispatch [:dnd/initialize-or-update-tooltip {:title "" :url "" :visible "hidden"} ])
 
 ;; << dragging menus >>
 
@@ -418,6 +419,7 @@
 
      (doseq [[dropzoneId folderId] dzFolderIdPairs]
 
+
        (let [dz dropzoneId
              dz-found (.getElementById js/document (str "drop-zone-" (name dz)))
              parentMenuOfDropzone (when dz-found (.-parentNode dz-found))
@@ -496,6 +498,8 @@
                      (appended-container (.getElementById js/document "my-panel") dropzone-id))
      newdb)))
 
+
+
 (rf/reg-event-db
  :dnd/synch-all-dropzones-to-folderId
  (fn [db _]
@@ -553,6 +557,7 @@
 ;; online (dateadded is always unchanged): when a folder is renamed or a link/folder within is renamed, dategroupmodified is not updated.
 ;; online (dateadded is always unchanged): when adding a new element, or moving an element into a folder, dategroupmodified updates
 ;; online (dateadded is always unchanged): when moving an element within a folder, dategroupmodified updates
+
 (defn fetch-recently-modified [rawTree]
   (let [flattenBookmarksTree
         (loop [subtreeZipper (zip/next (map-vec-zipper rawTree))  accumNodes '()]
@@ -593,7 +598,11 @@
             (for [x (range n)]
               {:id (str (+ 9000000000 (* 10 x))) :title "Google History" :url "https://google.com/" :type :historylink})))
 
-        colorList ["Aqua" "red" "Lime" "Yellow" "Magenta" "NavajoWhite"]
+        currentTheme (.getAttribute (.-documentElement js/document) "data-theme")
+        colorList (if (= currentTheme "lightblue") ["darkslategrey" "#222222" "#4d004d" "maroon" "MidnightBlue" "#432109"]
+                      ["Aqua" "red" "Lime" "Yellow" "Magenta" "NavajoWhite"])
+        bgColorList (if (= currentTheme "lightblue") ["#ccffff" "#ffcccc" "#ccffcc" "#ffffb3" "#ffccff" "NavajoWhite"]
+                        ["darkslategrey" "#222222" "#4d004d" "maroon" "MidnightBlue" "#432109"])
 
         allDroppedElements (if (.hasOwnProperty js/chrome "bookmarks")
                              @(rf/subscribe [:dnd/get-tabs])
@@ -638,6 +647,8 @@
             windowIdVec (when (= :tabselected selectTabHistory) (vec (distinct (map #(:windowId %) dropped-elements))))
             colorToWindowIdMap (reduce (fn [x y] (assoc x (first y) (second y) )) {}
                                        (map-indexed (fn [x y] [(keyword y) (nth colorList (mod x (count colorList)) )]) windowIdVec))
+            bgColorToWindowIdMap (reduce (fn [x y] (assoc x (first y) (second y) )) {}
+                                         (map-indexed (fn [x y] [(keyword y) (nth bgColorList (mod x (count bgColorList)) )]) windowIdVec))
 
             ;; embeddedMenuConfiguration
             ;; [{:optionClass "tabOption", :show true, :startCollapsed true, :defaultColumns 4, :minRows 103, :maxRows 109}
@@ -776,8 +787,6 @@
                   ;; :max-height "297px"}
                   :min-height (if embedded? (str (+ (* minRows 32) 9) "px") (/ thirdOfScreenPadding 4))
                   :max-height (when embedded? (str (+ (* maxRows 32) 9) "px"))}
-
-
           
           :on-context-menu (fn [e] (.preventDefault e)) ;; disable chrome's context menu
 
@@ -794,7 +803,8 @@
                 ^{:key [de selectTabHistory]}
                 ;;^{:key de}
                 [dndv/dropped-widget de embedded? embeddedWidgetWidth s (if (:last-in-col de) true false)
-                 (if-let [keyColor (keyword (:windowId de))]  (keyColor colorToWindowIdMap) "white") ])
+                 (if-let [keyColor (keyword (:windowId de))]  (keyColor colorToWindowIdMap) "white")
+                 (if-let [keyColor (keyword (:windowId de))]  (keyColor bgColorToWindowIdMap) "white")])
               gridElements)]))))
 
 
@@ -846,7 +856,6 @@
 (defn recently-modified-dropdown []
   (let [_ (update-recently-modified 20) ;; initialize upon first load 20 MAGIC ref 1/2
         recently-modified-list (rf/subscribe [:dnd/get-recently-modified])
-        highlight (r/atom false)
         s (r/atom {})]
     (fn []  
       [:select.RecentlyModified
@@ -855,12 +864,9 @@
         ;; :ref #(swap! s assoc :componentRef %)
         :ref (fn [el] (when el (swap! s assoc :componentRef el))) 
         
-        :on-mouse-over #(reset! highlight true)
-        :on-mouse-out #(reset! highlight false)
         :on-click #(do (update-recently-modified 20)) ;; update whenever clicked 20 MAGIC ref 2/2
         :on-change #(do (dndc/show-folder-wrapper (.-value (:componentRef @s)))
-                        (setattrib (:componentRef @s) "selectedIndex" 0))
-        :style {:background-color (if @highlight "#ff9100" "#840a01" )}}
+                        (setattrib (:componentRef @s) "selectedIndex" 0))}
        ;; nb: there are no events for options because they are handled by the os
        (conj (for [x @recently-modified-list] ^{:key (:id x)}
                [:option {:value (:id x)}
@@ -891,17 +897,13 @@
         s (r/atom {})]
 
     (fn []
-      [:div {:id (str "menu-tab-history")
+      [:div.EmbeddedMenu {:id (str "menu-tab-history")
              ;; DANGER WITHOUT "when" to guard: :ref #(swap! s assoc :componentRef %) ;; will cause infinite updates!
              ;; :ref (fn [el] (when el (swap! s assoc :componentRef el)))
              ;; :ref #(swap! s assoc :componentRef %)
-             :ref (fn [el] (when el (swap! s assoc :componentRef el))) 
+             :ref (fn [el] (when el (swap! s assoc :componentRef el)))}
 
-             :style {:background-color (if themeColor "#222222" "black") :border "2px solid white" :width "90vw" :margin "auto" }}
-
-       [:div {:style {:height "40px" :border-bottom "2px solid white" :cursor "default" :user-select "none" 
-                      :background-color "#af0404" 
-                      :display "grid" :grid-template-columns "2fr 3fr 3fr 1fr"}} 
+       [:div.EmbeddedMenuTitleBar  
 
         [:div {:style {:display "flex"}}
          [:div.EmbeddedMenuButton {:title "Fewer Columns"
@@ -916,28 +918,28 @@
          [recently-modified-dropdown]]
 
         [:div#tabhistory {:style {:display "flex" :justify-self "center" }}
-         [:div#tabbtn {:on-click #(do (rf/dispatch [:dnd/set-tabOrHistorySelected :tabselected])
-                                      (rf/dispatch [:dnd/reset-selected [] :tab-history :historyselected])
-                                      (reset! underline false)
-                                      (when (:componentRef @s)
-                                        (setattrib (.querySelector (:componentRef @s) "#searchBox") "value" @searchTabsText)))
-                       :style {:padding-right "50px" :padding-left "50px" :margin-right "1.4vw" :margin-top "2px"
-                               :color (when @selectTabHistory (@selectTabHistory {:tabselected "black" :historyselected "white"}))
-                               :background-color (when @selectTabHistory (@selectTabHistory {:tabselected "#ff9100" :historyselected "#840a01"}))
-                               :border-width "2px" :border-color "black" :border-radius "15px 15px 0px 0px" 
-                               :border-left-style "solid" :border-right-style  "solid" :border-top-style "solid" }}
+         [:div {:class (when @selectTabHistory
+                         (@selectTabHistory {:tabselected "tabbtn-active" :historyselected "tabbtn-inactive"}))
+                :on-click #(do (rf/dispatch [:dnd/set-tabOrHistorySelected :tabselected])
+                               (rf/dispatch [:dnd/reset-selected [] :tab-history :historyselected])
+                               (reset! underline false)
+                               (when (:componentRef @s)
+                                 (setattrib (.querySelector (:componentRef @s) "#searchBox") "value" @searchTabsText)))
+                :style {:padding-right "50px" :padding-left "50px" :margin-right "1.4vw" :margin-top "2px"
+                        :border-width "2px" :border-color "black" :border-radius "15px 15px 0px 0px" 
+                        :border-left-style "solid" :border-right-style  "solid" :border-top-style "solid" }}
           [:div {:style {:display "inline-block" :height "100%" :vertical-align "middle" }}] "Tabs"]
 
-         [:div#historybtn {:on-click #(do (rf/dispatch [:dnd/set-tabOrHistorySelected :historyselected]) 
-                                          (rf/dispatch [:dnd/reset-selected [] :tab-history :tabselected])
-                                          (when (:componentRef @s)
-                                            (setattrib (.querySelector (:componentRef @s) "#searchBox") "value" @searchHistoryText)))
-                           :style {:padding-right "1.4vw" :padding-left "1.4vw" :margin-left "1.4vw" :margin-top "2px"
-                                   :color (when @selectTabHistory (@selectTabHistory {:tabselected "white" :historyselected "black"}))
-                                   :background-color (when @selectTabHistory (@selectTabHistory {:tabselected "#840a01" :historyselected "#ff9100"}))
-                                   :border-width "2px"  :border-color "black" :border-radius "15px 15px 0px 0px" 
-                                   :border-left-style "solid" :border-right-style  "solid" :border-top-style "solid"
-                                   :display "grid" :grid-template-columns "min-content auto min-content"}}
+         [:div {:class (when @selectTabHistory
+                         (@selectTabHistory {:tabselected "historybtn-inactive" :historyselected "historybtn-active"}))
+                :on-click #(do (rf/dispatch [:dnd/set-tabOrHistorySelected :historyselected]) 
+                               (rf/dispatch [:dnd/reset-selected [] :tab-history :tabselected])
+                               (when (:componentRef @s)
+                                 (setattrib (.querySelector (:componentRef @s) "#searchBox") "value" @searchHistoryText)))
+                :style {:padding-right "1.4vw" :padding-left "1.4vw" :margin-left "1.4vw" :margin-top "2px"
+                        :border-width "2px"  :border-color "black" :border-radius "15px 15px 0px 0px" 
+                        :border-left-style "solid" :border-right-style  "solid" :border-top-style "solid"
+                        :display "grid" :grid-template-columns "min-content auto min-content"}}
           [:div.PlusMinusButton {:style {:justify-self "start" :display "flex" :align-items "center" :justify-content "center"
                                          :padding-right "10px" :padding-left "10px"}
                                  :title (when (= @selectTabHistory :historyselected) "Reduce 1 Day")
@@ -1002,7 +1004,7 @@
                                                  (dnd/filter-tabhistory-with-searchkeys :history inputBoxValue)))
                                            (clear-all-selections-except))
                              
-                             :style {:width "21vw" :background-color "wheat" :border-radius "5px"}  }]]]
+                             :style {:width "21vw" :border-radius "5px"}  }]]]
         
 
         [:div {:style {:display "flex" :justify-content "flex-end"}}
@@ -1025,8 +1027,6 @@
        
        (when @selectTabHistory
          [drop-zone-tabs true changeColumns @selectTabHistory searchTabsText searchHistoryText])])))
-
-
 
 (declare set-row-height-dropzone)
 (declare collapse-dropzone)
@@ -1052,18 +1052,13 @@
         s (r/atom {})]
 
     (fn []
-      [:div {:id (str "menu-" (name dropzone-id))
+      [:div.EmbeddedMenu {:id (str "menu-" (name dropzone-id))
              ;; DANGER WITHOUT "when" to guard: :ref #(swap! s assoc :componentRef %) ;; will cause infinite updates!
              ;; :ref (fn [el] (when el (swap! s assoc :componentRef el)))
              ;; :ref #(swap! s assoc :componentRef %)
-             :ref (fn [el] (when el (swap! s assoc :componentRef el))) 
+             :ref (fn [el] (when el (swap! s assoc :componentRef el)))}
 
-             :style {:background-color (if themeColor "#222222" "black") :border "2px solid white" :width "90vw" :margin "auto" }}
-
-       [:div {:style {:height "40px" :border-bottom "2px solid white" :cursor "default" :user-select "none" 
-                      :background-color "#af0404" 
-                      :display "grid" :grid-template-columns "2fr 3fr 3fr 1fr"}} 
-
+       [:div.EmbeddedMenuTitleBar 
 
         [:div {:style {:display "flex"  }}
          [:div.EmbeddedMenuButton {:title "Fewer Columns" :style {:display "flex" :align-items "center" :justify-content "center" 
@@ -1103,7 +1098,7 @@
                                            (dnd/recursive-dropzone-search dropzone-id inputBoxValue)
                                            (clear-all-selections-except))
                              
-                             :style {:width "21vw" :background-color "wheat" :border-radius "5px"}  }]]]
+                             :style {:width "21vw" :border-radius "5px"}  }]]]
 
         [:div.EmbeddedMenuButton {:title "Collapse"
                                   :style {:justify-self "end" :display "flex" :align-items "center" :justify-content "center"
@@ -1115,8 +1110,6 @@
        ;; Ensure :cutoffDropzoneElements defaultCutoffDropzoneElements exists before dropzone is mounted
        (when @(rf/subscribe [:dnd/dragdrop-options dropzone-id])
          [dndv/drop-zone dropzone-id true changeColumns nil nil nil searchText false])])))
-
-
 
 (defn dblclick-border [s border]
   (fn [e]
@@ -1165,9 +1158,7 @@
     (let [dropzone-reference (rdom/dom-node comp) ;; r/dom-node: react-class -> HTMLElement 
           menu-reference (.-parentNode dropzone-reference) ]
       ;;; if visible do nothing
-      (when (= @visibilityState "hidden")
-        (prn ["from set-menu-position-closure: [dropzone-id @positionState @visibilityState show-containing-folder-element-id] "
-                  [dropzone-id @positionState @visibilityState show-containing-folder-element-id]])
+      (when (= @visibilityState "hidden")        
         (let [menuBoundingRectangle (.getBoundingClientRect menu-reference) 
               countNodeList (.-length (.querySelectorAll dropzone-reference ".link-element, .folderbox-element, .blank-element"))]
           ;; if countNodeList is 0 do nothing ;; countNodeList is unused
@@ -1214,55 +1205,6 @@
            (setstyle dropzone-reference "height" (second dimensions)))
           ;; if scrollbars intermittently appear before visible is set there will be a placement error gap
           ;;(setstyle menu-reference "visibility" "visible")
-          (reset! visibilityState "visible"))))))
-
-#_(defn set-menu-position-closure--oldver-dec15-2022 [dropzone-id positionState visibilityState show-containing-folder-element-id]
-  (fn [comp]
-    (let [dropzone-reference (rdom/dom-node comp) ;; r/dom-node: react-class -> HTMLElement 
-          menu-reference (.-parentNode dropzone-reference) ]
-      ;;; if visible do nothing
-      (when (= @visibilityState "hidden")
-        (prn ["from set-menu-position-closure: [dropzone-id @positionState @visibilityState show-containing-folder-element-id] "
-                  [dropzone-id @positionState @visibilityState show-containing-folder-element-id]])
-        (let [menuBoundingRectangle (.getBoundingClientRect menu-reference) 
-              countNodeList (.-length (.querySelectorAll dropzone-reference ".link-element, .folderbox-element, .blank-element"))]
-          ;; if countNodeList is 0 do nothing ;; countNodeList is unused
-          (let [my-panelReference (.getElementById js/document "my-panel") ;; my-panelReference is unused
-                folderbutton (if show-containing-folder-element-id
-                               (.getElementById js/document (str "dropped-element-" show-containing-folder-element-id))
-                               (.getElementById js/document (str "dropped-element-" (dkey->fid dropzone-id))))]
-            ;; If folderbutton is nil, this is because show-folder was not called and has not set show-containing-folder-element-id, when
-            ;; showing a parent folder. And (str "dropped-element-" (dkey->fid dropzone-id)) is also nil because a folderbutton was not
-            ;; clicked to trigger calling set-menu-position-closure. Instead show-folder-wrapper must have been called from
-            ;; recently-modified-dropdown attempting to show a folder which is not currently visible as an html element. In this case ignore
-            ;; x-overflow and just check for y-overflow (which is based on the menucomponent only not any bookmark element) and show the
-            ;; folder with positionState set by show-folder-wrapper to a explicitly safe value.  ie. check for vertical overflow and (reset!
-            ;; visibilityState "visible") below.
-            (when folderbutton
-              ;; if overflow in x direction subtract (+ menuWidth folderbuttonWidth) from "left" of menu
-              (let [folderbuttonBoundingRectangle (.getBoundingClientRect folderbutton)
-                    menuLeftViewport (.-left menuBoundingRectangle)
-                    menuLeft (px-to-int (get-computed-style menu-reference "left"))
-                    ;;(.-offsetWidth menu-reference) returns wrong values for large titlebars 
-                    menuOffsetWidth (+ 8 (.-offsetWidth dropzone-reference)) ;; 8 is for 4px border on either side of dropzone
-                    menuViewportDisplacement (- (.-left menuBoundingRectangle) (.-left folderbuttonBoundingRectangle))
-                    viewportWidth (.-width (.-visualViewport js/window))]
-                (when (< viewportWidth (+ menuLeftViewport menuOffsetWidth)) 
-                  ;;(println "overflow-x has occured")
-                  ;;(setstyle menu-reference "left" (str (- menuLeft menuOffsetWidth menuViewportDisplacement) "px"))
-                  (reset! positionState [(first @positionState) (max 0 (- menuLeft menuOffsetWidth menuViewportDisplacement))]))))
-            (let [menuTop (px-to-int (get-computed-style menu-reference "top"))
-                  menuVPTop (.-top (.getBoundingClientRect menu-reference))
-                  menuOffsetHeight (.-offsetHeight menu-reference)
-                  viewportHeight (.-height (.-visualViewport js/window))
-                  verticalOverflowAmount (- (.-bottom menuBoundingRectangle) viewportHeight)]
-              (when (< viewportHeight (+ menuVPTop menuOffsetHeight))
-                ;;(println "overflow-y has occured")
-                ;; 20 is random number to check for why double overflow is occuring
-                ;;(setstyle menu-reference "top" (str (- menuTop verticalOverflowAmount 20)  "px"))
-                (reset! positionState [(- menuTop verticalOverflowAmount 20) (second @positionState)]))))
-          ;; if scrollbars intermittently appear before visible is set there will be a placement error gap
-          ;;(setstyle menu-reference "visibility" "visible") 
           (reset! visibilityState "visible"))))))
 
 (defn changeColumns-floating [menuReference positionState direction]
@@ -1315,7 +1257,6 @@
       (when (seq @dropped-elements) 
         [:div.Menu {:id (str "menu-" (name dropzone-id)) :style {:visibility @visibilityState :position "absolute"
                                                                  :top (str (first @positionState) "px") :left (str (second @positionState) "px") 
-                                                                 :background-color (if themeColor "#222222" "black")
                                                                  :z-index (or @currIndex 1)}
                     ;; DANGER WITHOUT "when" to guard: :ref #(swap! s assoc :componentRef %) ;; will cause infinite updates!
                     ;; :ref (fn [el] (when el (swap! s assoc :componentRef el)))
@@ -1323,22 +1264,21 @@
                     :ref (fn [el] (when el (swap! s assoc :componentRef el)))}
          
          [:div.MenuTitleBar {:title title
-                             :style {:height "40px" :border-bottom (if themeColor "2px solid #111111" "2px solid black")
-                                     :cursor "move" :user-select "none" :position "relative"
-                                     :display "grid" :grid-template-columns "min-content min-content auto min-content min-content min-content"} 
+                             :style {:height "40px" :cursor "move" :user-select "none" :position "relative"
+                                     :display "grid" :grid-template-columns "min-content min-content auto min-content min-content min-content min-content"} 
                              ;;:on-mouse-up (fn [e] (closeDragElement e))
                              :on-mouse-up #(reset! menuhasmoved? false)
-                             ;; dropzone-id is a key not a string, adds document wide mousemove and mouseup 
+                             ;; dropzone-id is a key not a string, adds document wide mousemove and mouseup
                              :on-mouse-down (fn [e] (dragMouseDown e dropzone-id))
                              :on-double-click (dblclick-menutitlebar s)}
 
           [:div.MenuPinBtn
-           {:on-mouse-up (fn [e] (do  (if @menuhasmoved? (reset! menuhasmoved? false) (toggle-image ratom-image dropzone-id))))
-            :on-double-click (fn [e] (do  (.stopPropagation e) (toggle-image ratom-image dropzone-id)))
-            :title "Pin Window"
+           {:on-mouse-up (fn [e] (do  (if @menuhasmoved? (reset! menuhasmoved? false) (dndc/show-parent (dkey->fid dropzone-id)))))
+            :on-double-click #(.stopPropagation %)
+            :title "Show Parent Folder"
             :style {:justify-self "start" :display "flex" :align-items "center" :justify-content "center"
                     :padding-right "10px" :padding-left "10px"}}
-           [:img {:src @ratom-image :style {:padding "2px"}  }]]
+           [:img {:src "images/up.png" :style {:padding "2px"}  }]]          
 
           [:div.MenuArrowBtn {:title "Toggle Search"
                               :style {:justify-self "start" :display "flex" :align-items "center" :justify-content "center"
@@ -1393,12 +1333,12 @@
                                                 (dnd/recursive-dropzone-search dropzone-id inputBoxValue)
                                                 (clear-all-selections-except))
                                   :style {:align-self "center" :margin "auto"
-                                          :max-width calculateWidth  :background-color "wheat" :border-radius "5px"}  }]]
+                                          :max-width calculateWidth  :border-radius "5px"}  }]]
 
               [:div.TitleBarText {:style {:justify-self "center" :align-self "center" 
                                           :max-width calculateWidth}} 
-               title]))
-
+               title]))          
+          
           [:div.MenuArrowBtn {:title "Fewer Columns"
                               :style {:justify-self "end" :display "flex" :align-items "center" :justify-content "center"
                                       :padding-right "10px" :padding-left "10px"}
@@ -1414,12 +1354,34 @@
                               :on-mouse-up #(cond (some? (.querySelector (:componentRef @s) ".search-not-found")) :do-nothing
                                                   :else (changeColumns-floating (:componentRef @s) positionState :right))}
            [:img {:src "images/right-chevron.png"  }]]
+
+          [:div.MenuArrowBtn
+           {:on-mouse-up (fn [e] (do  (if @menuhasmoved? (reset! menuhasmoved? false) (toggle-image ratom-image dropzone-id))))
+            :on-double-click (fn [e] (do  (.stopPropagation e) (toggle-image ratom-image dropzone-id)))
+            :title "Pin Window"
+            :style {:justify-self "start" :display "flex" :align-items "center" :justify-content "center"
+                    :padding-right "10px" :padding-left "10px"}}
+           [:img {:src @ratom-image :style {:padding "2px"}  }]]
           
+          ;; close icon: htps://www.flaticon.com/free-icon/close_1828778?term=close&page=1&position=1
           [:div.MenuCloseBtn
-           {:on-click (fn [e] (do (.stopPropagation e) (cleanup-child-dropzones dropzone-id :forceClose)
-                                  (dndc/hide-menu dndc/link-context-menu dndc/link-move-submenu-container)
-                                  (dndc/hide-menu dndc/folder-context-menu dndc/folder-move-submenu-container)))
-            :title "Close"
+           {:on-mouse-down #(.stopPropagation %)
+            :on-double-click #(.stopPropagation %)
+            ;; both preventDefault and stopPropagation to stop contextmenu on elements revealed underneath
+            :on-context-menu (fn [e] (.preventDefault e) (.stopPropagation e) 
+                               (if @menuhasmoved? (reset! menuhasmoved? false)
+                                   (do 
+                                     (cleanup-child-dropzones dropzone-id :forceClose)
+                                     (dndc/hide-menu dndc/link-context-menu dndc/link-move-submenu-container)
+                                     (dndc/hide-menu dndc/folder-context-menu dndc/folder-move-submenu-container)))
+                               false)
+            :on-mouse-up (fn [e] (.stopPropagation e)
+                           (when (= (.-button e) 0)
+                             (if @menuhasmoved? (reset! menuhasmoved? false)
+                                 (do (destroymenu dropzone-id)
+                                     (dndc/hide-menu dndc/link-context-menu dndc/link-move-submenu-container)
+                                     (dndc/hide-menu dndc/folder-context-menu dndc/folder-move-submenu-container)))))
+            :title "Right Click to Close Children"
             :style {:justify-self "end" :display "flex" :align-items "center" :justify-content "center"
                     :padding-right "10px" :padding-left "10px"}} 
            [:img {:src "images/close16.png" :style {:padding "5px"}  }]]] 
@@ -1583,7 +1545,7 @@
                                      ;; tested error => Error Occured:  {:type :custom-arg-error, :message find-id: id was not found}
                                      (catch :default e (println "Error Occured: " e)))]))))))
 
-        folderbutton-contextmenu-handler 
+        folderbutton-contextmenu-handler
         (fn [e]
           (.preventDefault e) ;; disables default right click menu
           (dndc/hide-menu dndc/link-context-menu dndc/link-move-submenu-container) ;; hide link menu
@@ -1643,14 +1605,19 @@
         ;; width is auto and contained in :folderbox where it is set to thirdOfscreen, 2% less than thirdofscreenpadding
         :style {:display "flex" :align-items "center" :flex-grow "1" ;; flex-grow is an item, not container property
                 :position "relative"  :user-select "none" :overflow "hidden" :white-space "nowrap" 
-                :text-overflow "ellipsis" }}
-       ;; if open then cleanup-child-dropzones closes it and destroys children (unless pinned).
-       ;; :on-mouse-up and :on-context-menu are disabled because otherwise the handlers will be called twice,
-       ;; once for :folderbox mouse-up and once for FolderButton 
-       ;; :on-mouse-up folderbutton-mouseup-handler
+                :text-overflow "ellipsis" }
+        
+        
+        
+        ;; if open then cleanup-child-dropzones closes it and destroys children (unless pinned).
+        ;; :on-mouse-up and :on-context-menu are disabled because otherwise the handlers will be called twice,
+        ;; once for :folderbox mouse-up and once for FolderButton 
+        ;; :on-mouse-up folderbutton-mouseup-handler
+        }
        
+       ;; https://www.flaticon.com/authors/dinosoftlabs
+       ;; Icons made by <a href="htps://www.flaticon.com/authors/dinosoftlabs" title="DinosoftLabs">DinosoftLabs</a> from <a href="https://www.flaticon.com/" title="Flaticon"> www.flaticon.com</a>
        [:img.icon-folder {:src "images/folder16.png"}] [:span {:style {:overflow "hidden" :text-overflow "ellipsis"}} title]])))
-
 
 (defn folderbox-overlay [top height currentDragState dropzoneElement s topOrBottom]
   [:div {:style {:position "absolute" :left "0px" :top top :height height :width "100%" :display (if @currentDragState "block" "none")}
@@ -1670,14 +1637,15 @@
   [:div {:style {:position "absolute" :left "0px" :top "25%" :height "50%" :width "100%"
                  :display (if @currentDragState "block" "none")}
          ;; on-drop doesn't work without this
-         :on-drag-over #(do (.preventDefault %) (when @s (setattrib (:componentRef @s) "className" "folderbox-element_drag_over")))
+         :on-drag-over #(do (.preventDefault %) (when @s (gc/add (:componentRef @s) "folderbox-element_drag_over")))
 
-         :on-drag-leave #(do (.preventDefault %) (when @s (setattrib (:componentRef @s) "className" "folderbox-element")))
+         :on-drag-leave #(do (.preventDefault %) (when @s (gc/remove (:componentRef @s) "folderbox-element_drag_over")))
 
          :on-drop (fn [event]
                     (do (.preventDefault event) ;; drag and drop works without this 
-                        (when @s (setattrib (:componentRef @s) "className" "folderbox-element"))
+                        (when @s (gc/remove (:componentRef @s) "folderbox-element_drag_over"))
                         (center-overlay-ondrop s event (:id dropzoneElement) 0 true)))}])
+
 
 ;; sometimes the appdb would not update with the new dragstate and so forcing the state to change until successful
 (def timerId (r/atom 0))  
@@ -1698,7 +1666,7 @@
   ;;subscription to the drag-status of dropzone element with id (:id dropzoneElement) and dropzone id: id
   (let [s (r/atom {})
         clicked (r/atom false)]
-    (fn [dropzoneElement embedded? embeddedWidgetWidth dropzoneRef lastInCol]
+    (fn [dropzoneElement embedded? embeddedWidgetWidth dropzoneRef lastInCol]      
       (let [currentDragState (rf/subscribe [:dnd/get-drag-state])
             dropzone-id (fid->dkey (:id dropzoneElement))
             parentDropzoneKey (if-let  [searchDropzoneKey (:searchDropzone dropzoneElement)]
@@ -1725,32 +1693,33 @@
             contextmenuVisible? @(rf/subscribe [:dnd/get-contextmenu-visible])
             getSelected @(rf/subscribe [:dnd/get-selected parentDropzoneKey])
             clipboardContents @(rf/subscribe [:dnd/get-clipboard])]
-        [:div.folderbox-element
-         {:id (str "dropped-element-" (name (:id dropzoneElement)))
-          ;; DANGER WITHOUT when guard: :ref #(swap! s assoc :componentRef %) ;; will cause infinite updates!
-          ;; :ref #(swap! s assoc :componentRef %)
-          :ref (fn [el] (when el (swap! s assoc :componentRef el))) 
-
-          :style {:box-sizing "border-box" :display "flex" :align-items "stretch"
-                  :position "relative" :width (if embedded? embeddedWidgetWidth thirdOfScreen)
+        [:div
+         {:class [(cond @currentDragState "folderbox-element no-hover"
+                        (or isCtrlDown isShiftDown) "folderbox-element-modifier-down"
+                        :else "folderbox-element")
+                  (when (some #{(:id dropzoneElement)} getSelected) "selected-widget")
                   ;; without a 2px solid black border, the highlighted radial gradient :background-image upon selection is looks too big
                   ;; the border must be black because otherwise with a transparent border the highlighted radial gradient will show through
                   ;; :border (if (some #{(:id dropzoneElement)} @(rf/subscribe [:dnd/get-selected parentDropzoneKey]))
                   ;;           "2px solid black" "2px solid transparent")
-                  :border (let [rightclicked? (= dropzoneElement (:rightClicked clipboardContents))
-                                selected? (some #{(:id dropzoneElement)} getSelected)]
-                            (cond (and contextmenuVisible? rightclicked?) "2px solid white"
-                                  selected? (if themeColor "2px solid #222222" "2px solid black")
-                                  :else "2px solid transparent"))
-                  :background-image (if (some #{(:id dropzoneElement)} getSelected)
-                                      "radial-gradient(circle at center, #AF0404 0%, gold 100%)" "none")} 
+                  (let [rightclicked? (= dropzoneElement (:rightClicked clipboardContents))
+                        selected? (some #{(:id dropzoneElement)} getSelected)]
+                    (cond (and contextmenuVisible? rightclicked?) "rightclick-lock-border"
+                          selected? "selected-mask-border"
+                          :else "transparent-border"))]
+
+          :id (str "dropped-element-" (name (:id dropzoneElement)))
+          ;; DANGER WITHOUT when guard: :ref #(swap! s assoc :componentRef %) ;; will cause infinite updates!
+          ;; :ref #(swap! s assoc :componentRef %)
+          :ref (fn [el] (when el (swap! s assoc :componentRef el))) 
+
+          :style {:width (if embedded? embeddedWidgetWidth thirdOfScreen)}
+          
           :draggable true ; ;; required for divs because  only images and links are draggable by default
-          ;; on-drop does not work without .preventDefault on-drag-over. See ondragover event.
-          :class (cond @currentDragState "folderbox-element no-hover"
-                       (or isCtrlDown isShiftDown) "folderbox-element-modifier-down"
-                       :else "folderbox-element")
+          ;; on-drop does not work without .preventDefault on-drag-over. See ondragover event.          
 
           :on-mouse-up #(reset! clicked %)
+          
           :on-context-menu #(reset! clicked %)
           
           :on-drag-start #(do (rf/dispatch [:dnd/set-drag-state true])
@@ -1788,7 +1757,6 @@
          ;; overlay 3
          [folderbox-overlay "75%" (if lastInCol (str calcHeight "px") "calc(50% + 4px)")
           currentDragState dropzoneElement s :bottom]]))))
-
 
 ;; << debugging, my-panel, and mounting >>
 
@@ -1859,6 +1827,45 @@
            [:img {:src "images/share.png" :style {:vertical-align "middle" :padding-left "4px" :padding-right "4px"} }]]
           [:div {:style {:flex .25}} ]])]))))
 
+;; tooltip
+(defn tooltip []
+  ;; @mousePosition is: {:x 98 :y 652}
+  (let [mousePosition (rf/subscribe [:dnd/mouse-position])
+        tooltip (rf/subscribe [:dnd/get-tooltip])
+        ;;opacity (r/atom 0)
+        ]
+    (fn []
+      [:div.tooltip
+       ;; prevent nil causing visible on startup
+       {:style {:visibility (or (:visible @tooltip) "hidden") 
+                :position "absolute"
+                :left (+ 20 (:x @mousePosition)) :top (+ 20 (:y @mousePosition))}}
+       [:div.title (:title @tooltip)]
+       [:div.hostname
+
+        [:img.icon-link {:draggable false
+                         :on-error #(setattrib (.-target %) "src" "images/link16.png")
+                         :src (cond (= (:title @tooltip) "Dragon Bookmark Manager") "images/dragon16.png"
+                                    (some #{(.-protocol (try (js/URL. (:url @tooltip)) (catch :default e "") ))}
+                                          '("chrome://" "chrome-extension://" "file://")) "images/link16.png"
+                                    (.hasOwnProperty js/chrome "bookmarks")
+                                    (str "https://www.google.com/s2/favicons?domain=" (:url @tooltip))
+                                    :else "images/link16.png")}]
+
+        [:span (.-hostname (try (js/URL. (:url @tooltip)) (catch :default e "") ))]]
+       (when (some #{(.-protocol (try (js/URL. (:url @tooltip)) (catch :default e "") ))} '("http:" "https:"))
+         [:div.thumbnail-container 
+          [:div.thumbnail 
+           [:iframe#iframe {;;:on-load #(reset! opacity 1)
+                            ;;:style {:opacity @opacity}
+                            
+                            :src (:url @tooltip)
+                            ;; using both allow-same-origin allow-scripts generates warnings: sandbox unnecessary
+                            ;; omitting sandbox alltogether causes redirects to be blocked
+                            ;; no allow-same-origin, and allow-scripts stops twitter, twitch, but no warnings
+                            :sandbox "allow-scripts"
+                            ;;:sandbox "allow-same-origin allow-scripts allow-popups allow-forms"
+                            :width "1440px" :height "900px"}]]])])))
 
 (defn my-panel
   []
@@ -1904,6 +1911,7 @@
        ;; [debug-panel @db]
 
        [:div.clear]
+       [tooltip]
 
        [:div#fade-alert-container]])))
 

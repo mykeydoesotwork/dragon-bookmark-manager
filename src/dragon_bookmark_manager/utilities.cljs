@@ -52,7 +52,7 @@
           (def embeddedMenuConfiguration configArrayCljs)
           (throw {:type :custom-error :message "utilities.cljs: (try ... (def embeddedMenuConfiguration ...) ...): The stored array is invalid "})))))
   (catch :default e
-    (println "This is first startup or an error occured from utilities.cljs: (def embeddedMenuConfiguration ...): " e)
+    (println "Error Occured from utilities.cljs: (def embeddedMenuConfiguration ...): " e)
     (.setItem js/localStorage "embeddedMenuConfiguration" "[{\"optionClass\":\"tabOption\",\"show\":true,\"startCollapsed\":false,\"defaultColumns\":4,\"minRows\":1,\"maxRows\":9},{\"optionClass\":\"historyOption\",\"show\":true,\"startCollapsed\":false,\"defaultColumns\":4,\"minRows\":1,\"maxRows\":9},{\"optionClass\":\"barOption\",\"show\":true,\"startCollapsed\":false,\"defaultColumns\":5,\"minRows\":1,\"maxRows\":9},{\"optionClass\":\"otherOption\",\"show\":true,\"startCollapsed\":false,\"defaultColumns\":5,\"minRows\":1,\"maxRows\":9}]")
     (def embeddedMenuConfiguration
       [{:optionClass "tabOption",     :show true, :startCollapsed false, :defaultColumns 4, :minRows 1, :maxRows 9}
@@ -61,15 +61,23 @@
        {:optionClass "otherOption",   :show true, :startCollapsed false, :defaultColumns 5, :minRows 1, :maxRows 9}])))
 
 ;; fetch and set global: themeColor, if 'theme' does not exist, undefined or malformed in localstorage then this will set it.
-(let [themeString (.getItem js/localStorage "theme")]
-  (if (or (= themeString "false") (= themeString "true"))
-    (def themeColor (cljs.reader/read-string themeString))
-    (do (.setItem js/localStorage "theme" false)
-        (def themeColor false))))
+(let [themeString (.getItem js/localStorage "savedtheme")]
+  (if (some #{themeString} '("blue" "red" "green" "lightblue" "oldtheme"))
+    (def themeColor (cljs.reader/read-string themeString))    
+    (do (.setItem js/localStorage "savedtheme" "blue") (def themeColor "blue"))))
 
 ;; set the body color:
-(if themeColor (gobj/set (.querySelector js/document "body") "className" "lightMode")
-    (gobj/set (.querySelector js/document "body") "className" "darkMode")) 
+(if themeColor (.setAttribute (.-documentElement js/document) "data-theme" themeColor)
+    (.setAttribute (.-documentElement js/document) "data-theme" "lightblue")) 
+
+
+;; fetch and set global: tabPreviewSetting, if 'tabPreviewSetting' does not exist, undefined or malformed in localstorage then set it.
+(let [tabPreviewString (.getItem js/localStorage "tabPreviewStored")]
+  (if (or (= tabPreviewString "false") (= tabPreviewString "true"))
+    (def tabPreviewSetting (cljs.reader/read-string tabPreviewString))
+    (do (.setItem js/localStorage "tabPreviewStored" true)
+        (def tabPreviewSetting true))))
+
 
 (defn gen-next-zindex 
   ([]  (let [res (swap! lastZIndex inc)] res)))
@@ -104,6 +112,7 @@
 (defn setattrib [e x y] (gobj/set e x y))
 (defn get-property [e x] (gobj/get e x))
 (defn get-computed-style "get computed style" [x y] (gobj/get (.getComputedStyle js/window x nil) y))
+;;(defn get-computed-style [x y] (aget (.getComputedStyle js/window x nil) y))
 
 
 (defn destroymenu [dropzone-id]
@@ -245,7 +254,8 @@
 ;; testing:
 ;; (rf/dispatch [:dnd/isDestinationSubfolderOfSource-new [:dropzone-1 ["2202" "2021" "6"]] [:dropzone-2202 0]]) ;; fade-alert error but moves 2021, 6
 ;; (rf/dispatch [:dnd/isDestinationSubfolderOfSource-new [:dropzone-1 ["2021" "6"]] [:dropzone-2202 0]]) ;; moves 2021, 6 only
-(rf/reg-event-db  
+
+(rf/reg-event-db  ;; re-frame/reg-event-db in events.org 
  :dnd/isDestinationSubfolderOfSource-new
  (fn [db [_ [sourceDropZoneId source-element-id-array] [destinationDropZoneId droppedPosition]]]
    (let [sourceFolders (filterv #(= :folderbox (:type (get-dz-element @(rf/subscribe [:dnd/db]) sourceDropZoneId %))) source-element-id-array)
@@ -304,6 +314,9 @@
                                                    (when (= js/chrome.runtime.lastError.message "Invalid URL.")
                                                      (run-fade-alert "New Page failed, invalid url."))
                                                    ))))))
+
+
+
 
 
 
@@ -446,8 +459,10 @@
 
        newBookmarkStub (zip/root (zip/edit foundParentZipperLoc assoc :children newChildArray
 					   ;; don't edit :dateAdded this is when the parent folder was created
-					   :dateGroupModified currentTimeEpoch))] ;; edit this to show children have been updated
-    newBookmarkStub)) 
+					   :dateGroupModified currentTimeEpoch)) ;; edit this to show children have been updated
+       ]
+    newBookmarkStub
+    )) 
 
 ;; --testing id
 ;; no id: => random id 53853 => {:dateAdded 1600622830115, :id 53853, :index 0, :parentId 2068, :title NEWBOOKMARK, :url NEWBOOKMARKURL.COM}
@@ -613,7 +628,7 @@
 
 
 
-(defn onevent-dispatch-refresh-fnhandle []
+(defn onevent-dispatch-refresh-fnhandle []  
   (rf/dispatch [:chrome-synch-all-dropzones-to-folderId {:type :updateAll}]))
 
 
@@ -625,7 +640,7 @@
 
   (cond  ;; sourceId cannot be nil but parentId or index can be nil
     (not (string? sourceId))
-    (throw {:type :custom-arg-error :message "chrome-move-bookmark: sourceId is not a string"})
+    (throw {:type :custom-arg-error :message "chrome-move-bookmark: sourceId is not a string"}) 
     (not (or (string? parentId) (nil? parentId))) 
     (throw {:type :custom-arg-error :message "chrome-move-bookmark: parentId is not (nil or a string)"})
     (not (or (int? index) (nil? index))) 
@@ -643,6 +658,7 @@
                                              [sourceId parentId index]
                                              " js/chrome.runtime.lastError.message: "  
                                              js/chrome.runtime.lastError.message)  )))))))
+
 
 #_(try ;; throws => {:type :custom-arg-error :message "chrome-move-bookmark: sourceId is not a string"}
     (chrome-move-bookmark 2204)

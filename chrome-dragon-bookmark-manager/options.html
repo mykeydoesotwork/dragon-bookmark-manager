@@ -34,18 +34,45 @@
       <div ></div>
       <div style="justify-self: end;" class="tableLabel" >Theme:
       </div>
+
+
       <div class="themeOption optionGridItem">
-	<span style="white-space:nowrap; margin-right: .5vw;">Dark</span>
-	<label class="switch">
-	  <input id="themeSlider" type="checkbox">
-	  <span class="slider round"></span>
-	</label>
-	<span style="white-space:nowrap; margin-left: .5vw">Light</span>
+	<select class="selector" id="themeSelector" name="theme">
+	  <option value="blue" selected>Blue</option>
+	  <option value="red">Red</option>
+	  <option value="green">Green</option>
+	  <option value="lightblue">Light Blue</option>
+	  <option value="oldtheme">Old Theme</option>
+	</select>
+
 
 	<img style="margin-left: 1vw;" src="images/help-web-button.png" class="helpButton"
-	     title="The dark theme uses a black background with brown, red, and yellow borders. The light theme uses a grey background with the same borders." />
-	<img src="images/refreshing.png" class="resetButton" data-default="storedTheme"
-	     title="Reset &quot;Theme&quot; to default: Dark"/>
+	     title="Dark Themes: Blue, Red and Green. Light themes: Light Blue" />
+	<img src="images/refreshing.png" class="resetButton" data-default="currentTheme"
+	     title="Reset &quot;Theme&quot; to default: Blue."/>
+
+      </div>
+      
+      <div></div>
+
+      <div></div>
+      <div></div>
+
+      <div ></div>
+      <div style="justify-self: end;" class="tableLabel" >Tab Preview
+      </div>
+      <div class="optionGridItem">
+	<span style="white-space:nowrap; margin-right: .5vw;">Off</span>
+	<label class="switch">
+	  <input id="tabPreviewSlider" type="checkbox">
+	  <span class="slider round"></span>
+	</label>
+	<span style="white-space:nowrap; margin-left: .5vw">On</span>
+
+	<img style="margin-left: 1vw;" src="images/help-web-button.png" class="helpButton"
+	     title="Tab preview off or on." />
+	<img src="images/refreshing.png" class="resetButton" data-default="tabPreviewStored"
+	     title="Reset &quot;Tab Preview&quot; to default: On."/>
 
       </div>
       <div></div>
@@ -53,6 +80,7 @@
       <div></div>
       <div></div>
 
+      
 
       <div></div>
       <div style="justify-self: end;" class="tableLabel"> Load More Cutoff: </div>
@@ -218,7 +246,7 @@
       <div style="justify-self: end;" class="tableLabel">Reset All</div>
       <div  class="optionGridItem">
 	<img src="images/help-web-button.png" class="helpButton"
-	     title="Reset all options to default: Theme: Dark, Load More Cutoff: 100, Show?: All Checked,  Start Collapsed?: All Unchecked, Default Columns: &quot;Tabs&quot; & &quot;History&quot;: 4, &quot;Bookmarks Bar&quot; & &quot;Other Bookmarks&quot;: 5, Minimum Rows: All 1, Maximum Rows: All 9  "/>
+	     title="Reset all options to default: Theme: Blue, Tab Preview: On, Load More Cutoff: 100, Show?: All Checked,  Start Collapsed?: All Unchecked, Default Columns: &quot;Tabs&quot; & &quot;History&quot;: 4, &quot;Bookmarks Bar&quot; & &quot;Other Bookmarks&quot;: 5, Minimum Rows: All 1, Maximum Rows: All 9  "/>
 	<img src="images/refreshing.png" class="resetButton" data-default="resetAll"
 	     title="Reset all options to default?"/>
       </div>

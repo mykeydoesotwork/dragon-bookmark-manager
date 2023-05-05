@@ -13,17 +13,17 @@ Click the ![info](/public/images/information.png) icon in the upper right corner
 ### Popup Menu and Views
 ![popup](/public/images/help/popup.png)
 
-Click "Bookmark Manager" to open the bookmark manager. Any menu item under "Recently Modified" will run the bookmark manager, with that folder already open. A "View" is a layout of folder windows which you can save and restore. To save a view; click the red, left hand side of a view button. To restore a view; click the green, right hand side of a view button. Any item under "Views" of the popup menu will run the bookmark manager and restore that view of folders.
+Click 'Bookmark Manager' to open the bookmark manager. Any menu item under 'Recently Modified' will run the bookmark manager, with that folder already open. A 'View' is a layout of folder windows which you can save and restore. To save a view; click the left hand side of a view button. To restore a view; click the right hand side of a view button. Any item under 'Views' of the popup menu will run the bookmark manager and restore that view of folders.
 
 ### Select, Copy, Paste and Delete
 ![select copy paste](/public/images/help/select-copy-paste.png)
 
 Use CTRL or SHIFT click to select tabs, history, bookmarks or folders. Use Ctrl-A to select all, Ctrl-C to copy, Ctrl-X to cut, and Ctrl-V to paste above the link currently highlighted by the mouse, or into the folder currently highlighted by the mouse. To paste above a folder, instead of within it, right click the folder and select 'Paste (above)' from the popup context menu. Press DEL to delete selected folders or links. Deleting greater then 10 items requires confirmation. There is no undo -- undo has not been implemented yet.
 
-### Lock Child Folder
-![lock child](/public/images/help/lock-child.png)
+### Pin Child Folder
+![Pin child](/public/images/help/lock-child.png)
 
-Normally closing a parent folder will close all of it's children. Click the lock icon in the top left corner of a child folder, to prevent the child folder from being automatically closed by it's parent.
+Left clicking the close button of a folder will only close that folder. Right clicking the close button of a parent folder to close all of it's children. Click the pin icon in the top right corner of a child folder, to prevent a child folder from being closed by it's parent.
 
 ### Rollup Titlebar
 ![lock child](/public/images/help/rollup.png)
@@ -38,7 +38,7 @@ Because this extension overrides the chrome bookmark manager, when you right cli
 ### Show Parent Folder
 ![show parent folder](/public/images/help/show-parent-folder.png)
 
-To find the parent folder of any search result, link, or folder right click and select 'Show Parent Folder' from the popup context menu. Repeat to find all parent folders.
+To find the parent folder of any search result, link, or folder, click the up arrow button in the top left corner of the menu, or right click and select 'Show Parent Folder' from the popup context menu. Repeat to find all parent folders.
 
 ### History Search
 ![history](/public/images/help/history.png)
@@ -62,7 +62,9 @@ The 'Recently Modified' drop-down list shows a list of most recently modified fo
 
 ## Options
 ![theme dark light](/public/images/help/theme-dark-light.png)  
-Light or Dark Mode: The dark theme uses a black background with brown, red, and yellow borders. The light theme uses a grey background with the same borders.
+Blue, red, and green dark themes, and light blue light theme.
+
+Tab preview which uses iframes can be turned off.
 
 Default column, row, and startup hide/show options for "Bookmarks Bar" and "Other Bookmarks" folder can be set in the extension options.
 

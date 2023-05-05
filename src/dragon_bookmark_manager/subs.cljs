@@ -75,8 +75,8 @@
  (fn [db _]
    (get-in db [:dnd/state :tab-history-options :historyDays])))
 
-;; new ids will be created by chrome when dropped, or randomly by stub-create-bookmark, but :id (:id y) is used here because
-;; at least then the generated reagent key in the dropzone ^{:key (:id de) will be unique temporarily 
+  ;; new ids will be created by chrome when dropped, or randomly by stub-create-bookmark, but :id (:id y) is used here because
+  ;; at least then the generated reagent key in the dropzone ^{:key (:id de) will be unique temporarily 
 (re-frame/reg-sub
  :dnd/get-tabs
  (fn [db _]
@@ -170,6 +170,8 @@
  (fn [db _]
    (get-in db [:mouse-button])))
   
+
+;; get clipboard information
 (re-frame/reg-sub
  :dnd/get-clipboard
  (fn [db _]
@@ -180,3 +182,8 @@
  (fn [db _]
    (get-in db [:dnd/state :views :view-titles])))
 
+;; get tooltip (rf/subscribe [:dnd/get-tooltip])
+(re-frame/reg-sub
+ :dnd/get-tooltip
+ (fn [db _]
+   (get-in db [:dnd/state :tooltip])))

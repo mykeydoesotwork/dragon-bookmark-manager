@@ -1,4 +1,3 @@
-
 (ns dragon-bookmark-manager.views
   (:require 
    [re-frame.core :as rf]
@@ -10,7 +9,8 @@
                                               get-dz-element zip-walk map-vec-zipper px-to-int setstyle setattrib get-property
                                               get-computed-style edge-overlay-ondrop center-overlay-ondrop link-overlay 
                                               delta-out delta-out2 lastZIndex gen-next-zindex clear-all-selections-except
-                                              fetch-all-selected embeddedMenuConfiguration themeColor defaultCutoffDropzoneElements]]
+                                              fetch-all-selected embeddedMenuConfiguration themeColor tabPreviewSetting
+                                              defaultCutoffDropzoneElements]]
    [dragon-bookmark-manager.events :as dnd]
    [dragon-bookmark-manager.contextmenu :as dndc]))
 
@@ -123,11 +123,9 @@
                                                       "linear-gradient(to bottom, white 2px, rgba(0,0,0,0) 4px, rgba(0,0,0,0) 100%)"                                                                           
                                                       @bgcolor) :top "44%" :width "100%" :height "4px"}}]])))
 
-
-
 (defmethod dropped-widget
   :tablink
-  [dropzoneElement embedded? embeddedWidgetWidth dropzoneRef lastInCol textColorForWindowId]
+  [dropzoneElement embedded? embeddedWidgetWidth dropzoneRef lastInCol textColorForWindowId bgColorForWindowId]
   (let [s (r/atom {})]
     (fn [dropzoneElement embedded? embeddedWidgetWidth dropzoneRef lastInCol]
       (let [thirdOfScreen (int (* (.-innerWidth js/window) 0.3))
@@ -144,27 +142,27 @@
             contextmenuVisible? @(rf/subscribe [:dnd/get-contextmenu-visible])
             getSelected @(rf/subscribe [:dnd/get-selected :tab-history :tabselected])
             clipboardContents @(rf/subscribe [:dnd/get-clipboard])] 
-        [:div.link-element
-         {:style {:display "flex" :align-items "stretch" :box-sizing "border-box"
-                  :position "relative" :width (if embedded? embeddedWidgetWidth thirdOfScreen)
+        [:div
+         {:class [(cond @currentDragState "link-element no-hover"
+                        (or isCtrlDown isShiftDown) "link-element-modifier-down"
+                        :else "link-element")
+                  (when (some #{(:id dropzoneElement)} getSelected) "selected-widget")
                   ;; :border (if (some #{(:id dropzoneElement)} @(rf/subscribe [:dnd/get-selected :tab-history :tabselected]))
                   ;;           "2px solid black" "2px solid transparent")
-                  :border (let [rightclicked? (= dropzoneElement (:rightClicked clipboardContents))
-                                selected? (some #{(:id dropzoneElement)} getSelected)]
-                            (cond (and contextmenuVisible? rightclicked?) "2px solid white"
-                                  selected? (if themeColor "2px solid #222222" "2px solid black")
-                                  :else "2px solid transparent"))
-                  :background-image (if (some #{(:id dropzoneElement)} getSelected)
-                                      "radial-gradient(circle at center, #AF0404 0%, gold 100%)" "none")} 
+                  (let [rightclicked? (= dropzoneElement (:rightClicked clipboardContents))
+                        selected? (some #{(:id dropzoneElement)} getSelected)]
+                    (cond (and contextmenuVisible? rightclicked?) "rightclick-lock-border"
+                          selected? "selected-mask-border"
+                          :else "transparent-border"))]
+
+          :style {:width (if embedded? embeddedWidgetWidth thirdOfScreen) :background-color bgColorForWindowId}
+          
           :id (str "dropped-element-" (name (:id dropzoneElement))) 
           :draggable true ;; required for divs because  only images and links are draggable by default
           ;; DANGER WITHOUT when guard: :ref #(swap! s assoc :componentRef %) ;; will cause infinite updates!
           ;;:ref #(swap! s assoc :componentRef %)
           :ref (fn [el] (when el (swap! s assoc :componentRef el))) 
           
-          :class (cond @currentDragState "link-element no-hover"
-                       (or isCtrlDown isShiftDown) "link-element-modifier-down"
-                       :else "link-element")
           :on-context-menu (fn [e]
                              (.preventDefault e) ;; disables default right click menu
                              ;; close folder menu, there is no need to hide the link menu because it will placed below
@@ -211,7 +209,7 @@
                                                                  {:id (str (+ 9000000000 x)) :windowId (str (+ 900000 x))
                                                                   :title "DuckDuckGo - Privacy, simplified." :url "https://duckduckgo.com/"
                                                                   :type :tablink}))) 
-                                                      
+                                                    
                                                     setAnchorTabElements (cond (empty? currentSelectedTabElements) [(:id dropzoneElement) :anchor] 
                                                                                (some #{:anchor} currentSelectedTabElements) currentSelectedTabElements
                                                                                :else (conj  (vec currentSelectedTabElements) :anchor))
@@ -233,7 +231,9 @@
                               :else (clear-all-selections-except))))
           
           
-          :on-drag-start #(do (rf/dispatch [:dnd/set-drag-state true]) 
+          :on-drag-start #(do (rf/dispatch [:dnd/set-drag-state true])
+                              (when tabPreviewSetting
+                                (rf/dispatch [:dnd/initialize-or-update-tooltip {:title "" :url "" :visible "hidden"}]))
                               #_(println "started dragging") 
                               #_(.setData (.-dataTransfer %) "text/my-custom-data"
                                           (str (name (:type dropzoneElement)) "," (:id dropzoneElement) ","
@@ -249,11 +249,16 @@
                                 (when (not (nat-int? (.indexOf selectedIds (:id dropzoneElement))))
                                   (clear-all-selections-except))))
           
-          :on-drag-end #(rf/dispatch [:dnd/set-drag-state false])}
+          :on-drag-end #(rf/dispatch [:dnd/set-drag-state false])
+          :on-mouse-over #(when tabPreviewSetting
+                            (rf/dispatch [:dnd/initialize-or-update-tooltip {:title title :url url :visible "visible"}]))
+          :on-mouse-out #(when tabPreviewSetting
+                           (rf/dispatch [:dnd/initialize-or-update-tooltip {:title "" :url "" :visible "hidden"}]))}
          ;; link widget : popups must be enabled for open in background to work, or else make the whole div an anchor and set target to _blank 
          ;; but then only single click works.
          ;; debug: (if-let [winId (:windowId dropzoneElement)]  (str title " window: " winId) title)
-         [:div {:title (str title "\n" url) 
+         [:div {:class (when (= title "Dragon Bookmark Manager") "blink")
+                :title (when (not tabPreviewSetting) (str title "\n" url))
                 :style {:overflow "hidden" :user-select "none" :white-space "nowrap" :text-overflow "ellipsis" :display "flex"
                         :align-items "center" :flex-grow "1" :color textColorForWindowId} 
                 :on-double-click #(.open js/window (:url dropzoneElement) "_blank")}
@@ -262,12 +267,13 @@
                            :style {:visibility "hidden"}
                            :on-load #(setstyle (.-target %) "visibility" "visible")
                            :on-error #(setattrib (.-target %) "src" "images/link16.png")
-                           :src (cond (#{"chrome://" "chrome-extension://" "file://"} (re-find #"^[a-zA-Z0-9]+://" (:url dropzoneElement)))
+                           :src (cond (= title "Dragon Bookmark Manager") "images/dragon16.png"
+                                      (#{"chrome://" "chrome-extension://" "file://"} (re-find #"^[a-zA-Z0-9]+://" (:url dropzoneElement)))
                                       "images/link16.png"
                                       (.hasOwnProperty js/chrome "bookmarks")
                                       (str "https://www.google.com/s2/favicons?domain=" (:url dropzoneElement))
                                       :else "images/link16.png")}]
-          [:span {:style {:overflow "hidden" :text-overflow "ellipsis"}} (str title ", " id )]]]))))
+          [:span {:style {:overflow "hidden" :text-overflow "ellipsis"}} (str title)]]]))))
 
 
 
@@ -276,7 +282,7 @@
   :historylink
   [dropzoneElement embedded? embeddedWidgetWidth dropzoneRef lastInCol]
   (let [s (r/atom {})]
-    (fn [dropzoneElement embedded? embeddedWidgetWidth dropzoneRef lastInCol]
+    (fn [dropzoneElement embedded? embeddedWidgetWidth dropzoneRef lastInCol]      
       (let [thirdOfScreen (int (* (.-innerWidth js/window) 0.3))
             {type :type title :title url :url id :id lastVisitTime :lastVisitTime parentId :parentId dateAdded :dateAdded index :index} dropzoneElement
             currentDragState (rf/subscribe [:dnd/get-drag-state]) ;; for 1440px monitor about 432px
@@ -291,29 +297,26 @@
             contextmenuVisible? @(rf/subscribe [:dnd/get-contextmenu-visible])
             getSelected @(rf/subscribe [:dnd/get-selected :tab-history :historyselected])
             clipboardContents @(rf/subscribe [:dnd/get-clipboard])]
-        [:div.link-element
-         {:style {:display "flex" :align-items "stretch" :box-sizing "border-box"
-                  :position "relative" :width (if embedded? embeddedWidgetWidth thirdOfScreen)
+        [:div
+         {:class [(cond @currentDragState "link-element no-hover"
+                        (or isCtrlDown isShiftDown) "link-element-modifier-down"
+                        :else "link-element")
+                  (when (some #{(:id dropzoneElement)} getSelected) "selected-widget")
                   ;; :border (if (some #{(:id dropzoneElement)} @(rf/subscribe [:dnd/get-selected :tab-history :historyselected]))
                   ;;           "2px solid black" "2px solid transparent")
-                  :border (let [rightclicked? (= dropzoneElement (:rightClicked clipboardContents))
-                                selected? (some #{(:id dropzoneElement)} getSelected)]
-                            (cond (and contextmenuVisible? rightclicked?) "2px solid white"
-                                  selected? (if themeColor "2px solid #222222" "2px solid black")
-                                  :else "2px solid transparent"))
-                  :background-image (if (some #{(:id dropzoneElement)} getSelected)
-                                      "radial-gradient(circle at center, #AF0404 0%, gold 100%)" "none")}
+                  (let [rightclicked? (= dropzoneElement (:rightClicked clipboardContents))
+                        selected? (some #{(:id dropzoneElement)} getSelected)]
+                    (cond (and contextmenuVisible? rightclicked?) "rightclick-lock-border"
+                          selected? "selected-mask-border"
+                          :else "transparent-border"))]
+          
+          :style {:width (if embedded? embeddedWidgetWidth thirdOfScreen)}
           :id (str "dropped-element-" (name (:id dropzoneElement))) 
           :draggable true ;; required for divs because  only images and links are draggable by default
           ;; DANGER WITHOUT "when" to guard: :ref #(swap! s assoc :componentRef %) ;; will cause infinite updates!
           ;; :ref (fn [el] (when el (swap! s assoc :componentRef el)))
           ;; :ref #(swap! s assoc :componentRef %)
-          :ref (fn [el] (when el (swap! s assoc :componentRef el))) 
-
-
-          :class (cond @currentDragState "link-element no-hover"
-                       (or isCtrlDown isShiftDown) "link-element-modifier-down"
-                       :else "link-element")
+          :ref (fn [el] (when el (swap! s assoc :componentRef el)))           
 
           :on-context-menu (fn [e]
                              (.preventDefault e) ;; disables default right click menu
@@ -343,49 +346,49 @@
                              (dndc/place-context-menu dndc/link-context-menu))
           
           :on-click (fn onclick [event]
-                      (let [isCtrlDown @(rf/subscribe [:dnd/get-keystate :ctrlIsDown])
-                            isShiftDown @(rf/subscribe [:dnd/get-keystate :shiftIsDown])
-                            currentSelectedTabElements @(rf/subscribe [:dnd/get-selected :tab-history :historyselected])
-                            dropzoneElementId (:id dropzoneElement)]
-                        (cond isCtrlDown (do (clear-all-selections-except :historyselected)
+                      (let [isCtrlDown @(rf/subscribe [:dnd/get-keystate :ctrlIsDown]) ;;-dn-
+                            isShiftDown @(rf/subscribe [:dnd/get-keystate :shiftIsDown]) ;;-dn-
+                            currentSelectedTabElements @(rf/subscribe [:dnd/get-selected :tab-history :historyselected]) ;;-dn-
+                            dropzoneElementId (:id dropzoneElement)] ;;-dn-
+                        (cond isCtrlDown (do (clear-all-selections-except :historyselected) ;;-dn-
                                              (rf/dispatch [:dnd/reset-selected (vec (remove #{:anchor} currentSelectedTabElements))
-                                                           :tab-history :historyselected])
-                                             (if (some #{dropzoneElementId} currentSelectedTabElements)
-                                               (rf/dispatch [:dnd/remove-selected :tab-history dropzoneElementId :historyselected])
-                                               (rf/dispatch [:dnd/append-selected :tab-history dropzoneElementId :historyselected])))
-                              isShiftDown (do (clear-all-selections-except :historyselected)
-                                              (let [allTabElementIds
-                                                    (if (.hasOwnProperty js/chrome "bookmarks")
-                                                      (map :id @(rf/subscribe [:dnd/get-history]))
-                                                      (map :id (for [x (range 10)]
-                                                                 {:id (str (+ 9000000000 (* 10 x))) :title "Google History"
-                                                                  :url "https://google.com/" :type :historylink})))
+                                                           :tab-history :historyselected]) ;;-dn-
+                                             (if (some #{dropzoneElementId} currentSelectedTabElements) ;;-dn-
+                                               (rf/dispatch [:dnd/remove-selected :tab-history dropzoneElementId :historyselected]) ;;-dn-
+                                               (rf/dispatch [:dnd/append-selected :tab-history dropzoneElementId :historyselected]))) ;;-dn-
+                              isShiftDown (do (clear-all-selections-except :historyselected) ;;-dn-
+                                              (let [allTabElementIds ;;-dn-
+                                                    (if (.hasOwnProperty js/chrome "bookmarks") ;;-dn-
+                                                      (map :id @(rf/subscribe [:dnd/get-history])) ;;-dn-
+                                                      (map :id (for [x (range 10)] ;; -dn-
+                                                                 {:id (str (+ 9000000000 (* 10 x))) :title "Google History" ;; -dn-
+                                                                  :url "https://google.com/" :type :historylink}))) ;; -dn-
                                                     
-                                                    setAnchorTabElements (cond (empty? currentSelectedTabElements) [(:id dropzoneElement) :anchor]
-                                                                               (some #{:anchor} currentSelectedTabElements) currentSelectedTabElements
-                                                                               :else (conj  (vec currentSelectedTabElements) :anchor))
-                                                    anchorElement (nth setAnchorTabElements (dec (.indexOf setAnchorTabElements :anchor)))
-                                                    anchorIndex (.indexOf allTabElementIds anchorElement)
-                                                    indexOfShiftClickedElement (.indexOf allTabElementIds dropzoneElementId)
+                                                    setAnchorTabElements (cond (empty? currentSelectedTabElements) [(:id dropzoneElement) :anchor] ;; -dn-
+                                                                               (some #{:anchor} currentSelectedTabElements) currentSelectedTabElements ;; -dn-
+                                                                               :else (conj  (vec currentSelectedTabElements) :anchor)) ;; -dn-
+                                                    anchorElement (nth setAnchorTabElements (dec (.indexOf setAnchorTabElements :anchor))) ;; -dn-
+                                                    anchorIndex (.indexOf allTabElementIds anchorElement) ;; -dn-
+                                                    indexOfShiftClickedElement (.indexOf allTabElementIds dropzoneElementId) ;; -dn-
 
-                                                    newSelectedTabElements
-                                                    (let [newSelectedTabElementsNoAnchor
-                                                          (for [index (range (min anchorIndex indexOfShiftClickedElement)
-                                                                             ;; inc because range open upper bound
-                                                                             (inc (max anchorIndex indexOfShiftClickedElement)))]
-                                                            (nth allTabElementIds index))
-                                                          [before after] (split-at (inc (.indexOf newSelectedTabElementsNoAnchor anchorElement))
-                                                                                   newSelectedTabElementsNoAnchor)]
-                                                      (vec (concat before [:anchor] after)))]
-                                                (rf/dispatch [:dnd/reset-selected newSelectedTabElements :tab-history :historyselected])))
+                                                    newSelectedTabElements ;; -dn-
+                                                    (let [newSelectedTabElementsNoAnchor ;; -dn-
+                                                          (for [index (range (min anchorIndex indexOfShiftClickedElement) ;; -dn-
+                                                                             ;; inc because range open upper bound ;; -dn-
+                                                                             (inc (max anchorIndex indexOfShiftClickedElement)))] ;; -dn-
+                                                            (nth allTabElementIds index)) ;; -dn-
+                                                          [before after] (split-at (inc (.indexOf newSelectedTabElementsNoAnchor anchorElement)) ;; -dn-
+                                                                                   newSelectedTabElementsNoAnchor)] ;; -dn-
+                                                      (vec (concat before [:anchor] after)))] ;; -dn-
+                                                (rf/dispatch [:dnd/reset-selected newSelectedTabElements :tab-history :historyselected]))) ;; -dn-
                               
                               :else (clear-all-selections-except))))
           
           :on-drag-start #(do (rf/dispatch [:dnd/set-drag-state true]) 
                               #_(println "started dragging") 
                               #_(.setData (.-dataTransfer %) "text/my-custom-data"
-                                        (str (name (:type dropzoneElement)) "," (:id dropzoneElement) ","
-                                             (str "dropzone-" (:parentId dropzoneElement))))
+                                          (str (name (:type dropzoneElement)) "," (:id dropzoneElement) ","
+                                               (str "dropzone-" (:parentId dropzoneElement))))
                               (.setData (.-dataTransfer %) "text/my-custom-data" (pr-str dropzoneElement))
                               ;; this allows link to be dropped on the location bar but ignored by drop handlers which take my-custom-data type
                               ;; note that multiple urls in text/uri-list do not open in tabs, so it's useless? unless maybe dropping onto bookmarks
@@ -414,9 +417,7 @@
                                       (.hasOwnProperty js/chrome "bookmarks")
                                       (str "https://www.google.com/s2/favicons?domain=" (:url dropzoneElement))
                                       :else "images/link16.png")}]          
-          (str title ", " id )]]))))
-
-
+          [:span {:style {:overflow "hidden" :text-overflow "ellipsis"}} (str title)]]]))))
 
 (defmethod dropped-widget
   :link
@@ -447,9 +448,11 @@
             contextmenuVisible? @(rf/subscribe [:dnd/get-contextmenu-visible])
             getSelected @(rf/subscribe [:dnd/get-selected parentDropzoneKey])
             clipboardContents @(rf/subscribe [:dnd/get-clipboard])] 
-        [:div.link-element
-         {:style {:display "flex" :align-items "stretch" :box-sizing "border-box"
-                  :position "relative" :width (if embedded? embeddedWidgetWidth thirdOfScreen)
+        [:div
+         {:class [(cond @currentDragState "link-element no-hover"
+                        (or isCtrlDown isShiftDown) "link-element-modifier-down"
+                        :else "link-element")
+                  (when (some #{(:id dropzoneElement)} getSelected) "selected-widget")
                   ;; without a 2px solid black border, the highlighted radial gradient :background-image upon selection is looks too big
                   ;; the border must be black because otherwise with a transparent border the highlighted radial gradient will show through
                   ;; if visible, and border is white (rightclicked?), keep white
@@ -457,23 +460,18 @@
                   ;; :border (if (some #{(:id dropzoneElement)} @(rf/subscribe [:dnd/get-selected parentDropzoneKey]))
                   ;;           "2px solid black" "2px solid transparent")
                   ;; "2px solid black"
-                  :border (let [rightclicked? (= dropzoneElement (:rightClicked clipboardContents))
-                                selected? (some #{(:id dropzoneElement)} getSelected)]
-                            (cond (and contextmenuVisible? rightclicked?) "2px solid white"
-                                  selected? (if themeColor "2px solid #222222" "2px solid black")
-                                  :else "2px solid transparent"))
-                  :background-image (if (some #{(:id dropzoneElement)} getSelected)
-                                      "radial-gradient(circle at center, #AF0404 0%, gold 100%)" "none")}
+                  (let [rightclicked? (= dropzoneElement (:rightClicked clipboardContents))
+                        selected? (some #{(:id dropzoneElement)} getSelected)]
+                    (cond (and contextmenuVisible? rightclicked?) "rightclick-lock-border"
+                          selected? "selected-mask-border"
+                          :else "transparent-border"))]
+          
+          :style {:width (if embedded? embeddedWidgetWidth thirdOfScreen)}
           :id (str "dropped-element-" (name (:id dropzoneElement))) 
           :draggable true ;; required for divs because  only images and links are draggable by default
           ;; DANGER WITHOUT when guard: :ref #(swap! s assoc :componentRef %) ;; will cause infinite updates!
           ;; :ref #(swap! s assoc :componentRef %)
           :ref (fn [el] (when el (swap! s assoc :componentRef el))) 
-
-
-          :class (cond @currentDragState "link-element no-hover"
-                       (or isCtrlDown isShiftDown) "link-element-modifier-down"
-                       :else "link-element")
 
           :on-context-menu (fn [e]
                              (.preventDefault e) ;; disables default right click menu
@@ -591,10 +589,9 @@
                            :src (cond (#{"chrome://" "chrome-extension://" "file://"} (re-find #"^[a-zA-Z0-9]+://" (:url dropzoneElement)))
                                       "images/link16.png"
                                       (.hasOwnProperty js/chrome "bookmarks")
-                                      ;; (str "https://api.statvoo.com/favicon/?url=" (:url dropzoneElement))
                                       (str "https://www.google.com/s2/favicons?domain=" (:url dropzoneElement))
                                       :else "images/link16.png")}]
-          [:span {:style {:overflow "hidden" :text-overflow "ellipsis"}} title ]]
+          [:span {:style {:overflow "hidden" :text-overflow "ellipsis"}} (str title)]]
          
          ;; overlay 1
          [link-overlay "calc(-25% - 4px)" "calc(50% + 4px)" s currentDragState dropzoneElement :top]
@@ -614,10 +611,7 @@
          ;; on the top overlay coincidentally always work out, because dropping on the bottom half of a non-bottom element is actually
          ;; dropping on the top half of the overlay of the next element. And the dispatch always drops before it's target element.
          ;; height = 50%=14px + 4px dummy element + 5px drop-zone padding
-         [link-overlay "75%" (if lastInCol (str calcHeight "px") "calc(50% + 4px)") s currentDragState dropzoneElement :bottom]
-
-         ]))))
-
+         [link-overlay "75%" (if lastInCol (str calcHeight "px") "calc(50% + 4px)") s currentDragState dropzoneElement :bottom]]))))
 
 (defmethod dropped-widget
   :dummy [de embedded? embeddedWidgetWidth dropzoneRef lastInCol]
@@ -759,7 +753,6 @@
                   :cursor (when lastInCol "pointer")
                   :height calcHeight}}]))))
 
-
 (declare cutoffDropzoneElements)
 (defmethod dropped-widget
   :loadmorebutton
@@ -801,7 +794,7 @@
 
 
 
-;; see: \bookmarkext-clojurescript-notes\example-dropzone-component.cljs for example walkthrough
+;; see: C:\Users\admin\Desktop\hk\bookmarkext-clojurescript-notes\example-dropzone-component.cljs for example walkthrough
 (defn drop-zone 
   [id embedded? changeColumns positionState dimensions visibilityState searchText show-containing-folder-element-id]
   ;; show-containing-folder-element-id is ignored but necessary as this is the render function for
@@ -811,9 +804,15 @@
   (let [allDroppedElements (rf/subscribe [:dnd/dropped-elements id])
         cutoffDropzoneElements (rf/subscribe [:dnd/get-cutoff-elements id]) 
         dropped-elements (take @cutoffDropzoneElements @allDroppedElements)
+
+
         ;; The thirdOfScreen for dropped-elements is 0.3, thirdOfScreenPadding is 0.32 to provide empty 2% padding with the scrollbar
         ;; for 1440px monitor 30% is 432px 32% is 461px, so 29px of padding 
         s (r/atom {}) ;; hold on to a dom reference to the button using reagent :ref attribute below
+
+
+
+        
         dzGeomWidth (r/atom nil)
         dzGeomHeight (r/atom nil)
         observerGuard (r/atom true)
@@ -845,12 +844,12 @@
                                                                  prevSmallestFound (first possibleColumnsEmbeddedArray)))]
 
     
-    (fn [id embedded? changeColumns positionState dimensions visibilityState searchText]
+    (fn [id embedded? changeColumns positionState dimensions visibilityState searchText]      
       (let [dropped-elements (take @cutoffDropzoneElements @(rf/subscribe [:dnd/dropped-elements id])) 
 
             fetchMenuFrame (when (:componentRef @s) (.closest (:componentRef @s) "div[id^='menu-dropzone']"))
             ;; supposedly an observer is garbage collected when it's htmlelement has been destroyed?
-            _ (when (and @observerGuard dzObserver (:componentRef @s))
+            _ (when (and @observerGuard dzObserver (:componentRef @s))                
                 (reset! observerGuard false)
                 (.observe dzObserver (:componentRef @s)))
 
@@ -944,13 +943,13 @@
                         (concat
                          (flatten (map-indexed
                                    (fn [idx itm] (concat (list {:id (str "dummyid-newcol" idx) :type :dummy :parentId (dkey->fid id)} ) itm))
-                                               part-result-withlastcol))
+                                   part-result-withlastcol))
                          [{:id (str "dummyid-newcol" (count part-result-withlastcol) ) :type :dummy :parentId (dkey->fid id)}
                           {:type :loadmorebutton :id id :countAll (count @allDroppedElements)}])
                         (concat
                          (flatten (map-indexed
                                    (fn [idx itm] (concat (list {:id (str "dummyid-newcol" idx) :type :dummy :parentId (dkey->fid id)} ) itm))
-                                               part-result-withlastcol))
+                                   part-result-withlastcol))
                          [{:type :loadmorebutton :id id :countAll (count @allDroppedElements)}]))
 
                       ;; if there is no cutoff necessary then don't add a loadmore button
@@ -997,8 +996,5 @@
                        [dropped-widget de embedded? embeddedWidgetWidth s
                         (if (:last-in-col de) {:width @dzGeomWidth :height @dzGeomHeight} false) ])
                      gridElements))]))))
-
-
-
 
 

@@ -23,6 +23,22 @@
 
 
 ;; << utility functions >>
+;; (defn selectall-rightclicked-dropzone [])
+;; (defn hide-menu [menu & [submenu-container]])
+;; (defn place-context-menu [menu])
+;; (defn find-title-from-id [elementId])
+;; (defn folder-already-shown-error-msg [elementId])
+;; (defn show-folder [parentDropzone rightClickedElement])
+;; (defn show-grand-parent [elementId rightClickedElement])
+;; (defn show-containing-folder [])
+;; (defn fetch-all-selected [])
+;; (defn delete-selected [])
+;; (defn cutToClipboard [])
+;; (defn move-to-top-or-bottom [& {:keys [topOrBottom newFolder] :or {topOrBottom :top newFolder nil}}])
+;; (defn process-bookmarkElementVector [bookmarkElementVector newParentId newIndex createElementCounter countSelectedElementList])
+;; (defn process-bookmarkElement [bookmarkElement newParentId newIndex createElementCounter countSelectedElementList])
+;; (rf/reg-event-fx :dnd/pasteFromClipboard )
+;; (defn open-in-tabs [])
 
 
 ;; Utility Functions for Context Menu  --------------------------------------------------------------------------------------------------
@@ -101,9 +117,10 @@
         mousePosition @(rf/subscribe [:dnd/mouse-position]) ;;{:x more +ve is right, :y more +ve is down}
         xMPos (:x mousePosition)
         yMPos (:y mousePosition)
-        
-        viewportWidth  (.-clientWidth (.getElementById js/document "my-panel")) ;; excludes scrollbar
-        viewportHeight (.-clientHeight (.getElementById js/document "my-panel")) ;; excludes scrollbar
+        ;;(.-clientWidth (.getElementById js/document "my-panel")) ;; excludes scrollbar
+        viewportWidth  (.-clientWidth (.-documentElement js/document)) 
+        ;;(.-clientHeight (.getElementById js/document "my-panel")) ;; excludes scrollbar
+        viewportHeight (.-clientHeight (.-documentElement js/document)) 
 
         _ (setstyle (.getElement menu) "display" "block")
         _ (setstyle (.getElement menu) "visibility" "hidden")
@@ -160,7 +177,8 @@
           parentTitle (if (> (count title-found) 26) (str (subs title-found 0 26) "...") title-found)]
       (run-fade-alert (str "Folder \"" parentTitle "\" is already shown.")))))
 
-
+;; for show-folder [elementId rightClickedElement menuPos] rightClickedElement or menuPos can be nil
+;; see show-folder-wrapper below for example nil used for rightClickedElement but menuPos not nil
 (defn show-folder [parentDropzone rightClickedElement menuPos] ;; menuPos is of the form [100 100]
   (rf/dispatch [:dnd/initialize-drop-zone
                 parentDropzone ;; this is the dropzone-id key
@@ -224,6 +242,25 @@
            :else :do-nothing)
      {:fx []})))
  
+;; offline is unhandled currently
+;; for show-folder [elementId rightClickedElement menuPos] rightClickedElement or menuPos can be nil
+(defn show-parent [elementId]
+  (let [showFolderOrErrorFunction
+        (fn [parentId] (let [menuOpenState (rf/subscribe [:dnd/menuOpen-state (fid->dkey parentId)])
+                             dropzone-options @(rf/subscribe [:dnd/dropzone-options])
+                             list-of-dropzones (keys dropzone-options)]
+                         (if (and (nat-int? (.indexOf list-of-dropzones (fid->dkey parentId))) @menuOpenState)
+                           (folder-already-shown-error-msg parentId)
+                           ;; since rightClickedElement and menuPos omited, menu will show at [100 100]
+                           (show-folder (fid->dkey parentId) nil nil))))
+        
+        callbackFunction
+        (fn [x]
+          (let [requestedElement (first (js->clj x :keywordize-keys true))
+                requestedElementParentId (:parentId requestedElement)]
+            (showFolderOrErrorFunction requestedElementParentId)))]
+    
+    (.. js/chrome -bookmarks (get elementId callbackFunction))))
 
 ;; check if grandparent exists in appdb and is already displayed then show error, else display grandparent dropzone of rightclicked
 (defn show-grand-parent [elementId rightClickedElement] 
@@ -1438,7 +1475,7 @@
   (goog.html.SafeHtml.create "div" #js {"class" "helpDialogGrid"}
                              (goog.html.SafeHtml.concat
                               (goog.html.SafeHtml.create "div" #js { "style" #js  {"text-shadow" "2px 2px 5px black"}} "Popup Menu and Views")
-                              (goog.html.SafeHtml.create "div" #js {} "Click 'Bookmark Manager' to open the bookmark manager. Any menu item under 'Recently Modified' will run the bookmark manager, with that folder already open. A 'View' is a layout of folder windows which you can save and restore. To save a view; click the red, left hand side of a view button. To restore a view; click the green, right hand side of a view button. Any item under 'Views' of the popup menu will run the bookmark manager and restore that view of folders.")
+                              (goog.html.SafeHtml.create "div" #js {} "Click 'Bookmark Manager' to open the bookmark manager. Any menu item under 'Recently Modified' will run the bookmark manager, with that folder already open. A 'View' is a layout of folder windows which you can save and restore. To save a view; click the left hand side of a view button. To restore a view; click the right hand side of a view button. Any item under 'Views' of the popup menu will run the bookmark manager and restore that view of folders.")
 
                               (goog.html.SafeHtml.create "div" #js {} )
                               (goog.html.SafeHtml.create "div" #js {} (goog.html.SafeHtml.create "img" #js {"src" "images/help/popup.png"} ))
@@ -1530,8 +1567,8 @@
                                                          (goog.html.SafeHtml.create "img" #js {"src" "images/help/select-copy-paste.png"} ))
 
 
-                              (goog.html.SafeHtml.create "div" #js { "style" #js  {"text-shadow" "2px 2px 5px black"}} "Lock Child Folder")
-                              (goog.html.SafeHtml.create "div" #js {} "Normally closing a parent folder will close all of it's children. Click the lock icon in the top left corner of a child folder, to prevent the child folder from being automatically closed by it's parent.")
+                              (goog.html.SafeHtml.create "div" #js { "style" #js  {"text-shadow" "2px 2px 5px black"}} "Pin Child Folder")
+                              (goog.html.SafeHtml.create "div" #js {} "Left clicking the close button of a folder will only close that folder. Right clicking the close button of a parent folder to close all of it's children. Click the pin icon in the top right corner of a child folder, to prevent a child folder from being closed by it's parent.")
 
                               (goog.html.SafeHtml.create "div" #js {} )
                               (goog.html.SafeHtml.create "div" #js {}
@@ -1553,7 +1590,7 @@
                                                          (goog.html.SafeHtml.create "img" #js {"src" "images/help/bookmark-manager-override.png"} ))
                               
                               (goog.html.SafeHtml.create "div" #js { "style" #js  {"text-shadow" "2px 2px 5px black"}} "Show Parent Folder")
-                              (goog.html.SafeHtml.create "div" #js {} "To find the parent folder of any search result, link, or folder right click and select 'Show Parent Folder' from the popup context menu. Repeat to find all parent folders.")
+                              (goog.html.SafeHtml.create "div" #js {} "To find the parent folder of any search result, link, or folder, click the up arrow button in the top left corner of the menu, or right click and select 'Show Parent Folder' from the popup context menu. Repeat to find all parent folders.")
 
                               (goog.html.SafeHtml.create "div" #js {} )
                               (goog.html.SafeHtml.create "div" #js {}

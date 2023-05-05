@@ -1,5 +1,21 @@
 'use strict';
 
+// ;; ------------------------------------------------------------------------------------
+// ;;  tooltips and defaults
+
+// ;; ------------------- options.html
+// ;; -dn-check reset buttons
+// ;; -dn-check html default values
+// ;; -dn-check reset all button
+
+// ;; ------------------- options.js
+// ;; -dn-var defaultEmbeddedMenuConfiguration 
+
+// ;; ------------------- utilities.cljs
+// ;; -dn-def embeddedMenuConfiguration 
+// ;; -dn-.setItem js/localStorage "embeddedMenuConfiguration" 
+
+
 // Global vars
 var defaultEmbeddedMenuConfiguration =
     [{optionClass: "tabOption"    , show: true,  startCollapsed: false,  defaultColumns:4, minRows: 1, maxRows: 9},
@@ -10,7 +26,9 @@ var defaultEmbeddedMenuConfiguration =
 
 var updateNotification = document.getElementById("updateNotification");
 var loadMoreCutoffElement = document.getElementById("loadMoreCutoff");
-var themeSliderElement = document.getElementById("themeSlider")
+var themeSelectorElement = document.getElementById("themeSelector");
+var tabPreviewSliderElement = document.getElementById("tabPreviewSlider")
+
 
 var helpDialogObj = document.getElementById ("helpDialog");
 var resetDialogObj = document.getElementById ("resetDialog");
@@ -25,21 +43,47 @@ function displayUpdateNotification() {
 
 function startup() {
 
-    // =============== Setup Light Dark Mode:
-    var storedTheme = localStorage.getItem('theme');
-    if(storedTheme === 'true' || storedTheme === 'false') {
-	if (storedTheme === 'true'){
-	    themeSliderElement.checked = true;
-	} else if (storedTheme === 'false') {
-	    themeSliderElement.checked = false;
+    // =============== Setup theme:
+    var currentTheme = localStorage.getItem('savedtheme');
+    // themeSelectorElement
+    if(typeof currentTheme === 'string') {
+	var i;
+	for (i = 0; i < themeSelectorElement.length; i++) {
+	    if(currentTheme == themeSelectorElement.options[i].value){
+		themeSelectorElement.value = themeSelectorElement.options[i].value;
+		break;
+	    }
+	}
+	if(i==themeSelectorElement.length) {
+	    // if currentTheme was not found reset widget and local storage
+	    localStorage.setItem('savedtheme', "blue");
+	    themeSelectorElement.value = "blue";
 	}
     }
     // localstorage invalid, reset local storage, and element
     else {
-	localStorage.setItem('theme', false);
-	themeSliderElement.checked = false;
-    }    
+	localStorage.setItem('savedtheme', "blue");
+	themeSelectorElement.value = "blue";
+    }
+
+    // =============== Setup Tab Preview Option:
+    var tabPreviewStored = localStorage.getItem('tabPreviewStored');
+    if(tabPreviewStored === 'true' || tabPreviewStored === 'false') {
+	if (tabPreviewStored === 'true'){
+	    tabPreviewSliderElement.checked = true;
+	} else if (tabPreviewStored === 'false') {
+	    tabPreviewSliderElement.checked = false;
+	}
+    }
+    // localstorage invalid, reset local storage, and element
+    else {
+	localStorage.setItem('tabPreviewStored', true);
+	tabPreviewSliderElement.checked = true;
+    }
+
+
     
+        
     // =============== Setup Load More Cutoff:
     // if there is something wrong with the stored value, reset it to 100, then set the displayed inputbox value to 100
     // otherwise, just load the stored value into load more cutoff input box
@@ -74,7 +118,8 @@ function startup() {
     
     // attach all event listeners
     loadMoreCutoffElement.addEventListener("input", inputLoadMoreCutoff);
-    themeSliderElement.addEventListener("input", inputSlider);
+    themeSelectorElement.addEventListener("change", inputSelector);
+    tabPreviewSliderElement.addEventListener("input", inputSlider);
 
     document.querySelector("#show.barOption").addEventListener("input", inputCheckBox);
     document.querySelector("#show.otherOption").addEventListener("input", inputCheckBox);
@@ -173,19 +218,30 @@ function loadArrayIntoUI(configArray) {
 	}
 }
 
+function inputSelector(event) {
+    if(typeof themeSelectorElement.value === 'string') {
+	localStorage.setItem('savedtheme', themeSelectorElement.value);
+	displayUpdateNotification();
+    }
+    else {
+	localStorage.setItem('savedtheme', "blue");
+	themeSelectorElement.value = "blue";
+    }
+}
 
 function inputSlider(event) {
 
-    if(themeSliderElement.checked === true || themeSliderElement.checked === false) {
-	localStorage.setItem('theme', themeSliderElement.checked);
+    if(tabPreviewSliderElement.checked === true || tabPreviewSliderElement.checked === false) {
+	localStorage.setItem('tabPreviewStored', tabPreviewSliderElement.checked);
 	displayUpdateNotification();
     }
-    // themeSliderElement.checked is invalid, reset localstorage and slider to false
+    // tabPreviewSliderElement.checked is invalid, reset localstorage and slider to false
     else {
-	localStorage.setItem('theme', false);
-	themeSliderElement.checked = false;
+	localStorage.setItem('tabPreviewStored', true);
+	tabPreviewSliderElement.checked = true;
     }    
 }
+
 
 function inputCheckBox(event) {
 
@@ -298,18 +354,25 @@ function resetDialogObjCloseHandler() {
     if (resetDialogObj.returnValue === "confirm") {
 
 	displayUpdateNotification();
-	
-	if (resetDialogObj.dataDefaultField === "storedTheme") {
-	    localStorage.setItem('theme', false);
-	    themeSliderElement.checked = false;
+
+	if (resetDialogObj.dataDefaultField === "currentTheme") {
+	    localStorage.setItem('savedtheme', "blue");
+	    themeSelectorElement.value = "blue";
+	} else if (resetDialogObj.dataDefaultField === "tabPreviewStored") {
+	    localStorage.setItem('tabPreviewStored', true);
+	    tabPreviewSliderElement.checked = true;
 	} else if (resetDialogObj.dataDefaultField === "storedDefaultCutoff") {
 	    localStorage.setItem('defaultcutoff', 100);
 	    loadMoreCutoffElement.value = 100;
 	} else if (resetDialogObj.dataDefaultField === "resetAll") {
 	    // reset theme
-	    localStorage.setItem('theme', false);
-	    themeSliderElement.checked = false;
+	    localStorage.setItem('savedtheme', "blue");
+	    themeSelectorElement.value = "blue";
 
+	    // reset tab preview
+	    localStorage.setItem('tabPreviewStored', true);
+	    tabPreviewSliderElement.checked = true;
+	    
 	    // reset loadmorecutoff
 	    localStorage.setItem('defaultcutoff', 100);
 	    loadMoreCutoffElement.value = 100;

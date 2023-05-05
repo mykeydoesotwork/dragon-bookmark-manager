@@ -1,15 +1,146 @@
-
 /* Selected text is draggable by default this prevents Ctrl-a select all, 
    which causes the drag image to consist of all text on the screen */
 * {
     user-select: none;
 }
 
+:root, [data-theme="blue"] {
+    --border-color: white;
+    --bg-color: black;
+    --text-color-active: black;
+    --text-color-inactive: #ffffff;
+    --fmenu-active: #2196F3;
+    --fmenu-inactive: #0D47A1;
+    --emenutitlebar-bg: #303F9F;
+    --emenutitlebar-element-bg-inactive: #1A237E;
+    --emenutitlebar-element-bg-active: #9FA8DA;
+    --emenu-outer-border: 2px solid var(--border-color);
+    --emenutitlebar-bottom-border: 2px solid var(--border-color);
+    --viewbar-outer-border: 2px solid var(--border-color);
+    --emenu-thumb-scroll: #e6e6e6;
+    --viewbar-right-highlight: cyan;
+    --viewbar-background: color-mix(in srgb, var(--emenutitlebar-bg) 50%, black);
+    --dummy-divider: orange;
+    --searchbox-bg-color: #E8EAF6;
+    --gradient-inner: #AF0404;
+    --gradient-outer: gold;
+    --widget-mouse-over-highlight: transparent;
+    --widget-mouse-over-border: 2px solid white;
+    --widget-mouse-over-border-modifier-down: 2px solid red;
+    --folderbox-element-drag-over: #004d99;
+}
+
+[data-theme="red"] {
+    --border-color: #444444;
+    --bg-color: black;
+    --text-color-active: black;
+    --text-color-inactive: white;
+    --fmenu-active: #EF9A9A;
+    --fmenu-inactive: #D50000;
+    --emenutitlebar-bg: #F44336;
+    --emenutitlebar-element-bg-inactive: #C62828;
+    --emenutitlebar-element-bg-active: #FFCDD2;
+    --emenu-outer-border: 2px solid var(--border-color);
+    --emenutitlebar-bottom-border: 2px solid var(--border-color);
+    --viewbar-outer-border: 2px solid var(--border-color);
+    --emenu-thumb-scroll: #e6e6e6;
+    --viewbar-right-highlight: #FFEBEE;
+    --viewbar-background: color-mix(in srgb, var(--emenutitlebar-bg) 80%, black);
+    --dummy-divider: orange;
+    --searchbox-bg-color: #E0F2F1;
+    --gradient-inner: #AF0404;
+    --gradient-outer: gold;
+    --widget-mouse-over-highlight: transparent;
+    --widget-mouse-over-border: 2px solid white;
+    --widget-mouse-over-border-modifier-down: 2px solid red;
+    --folderbox-element-drag-over: #004d99;
+}
+
+[data-theme="green"] {
+    --border-color: #E0F2F1;
+    --bg-color: black;
+    --text-color-active: black;
+    --text-color-inactive: white;
+    --fmenu-active: #80CBC4;
+    --fmenu-inactive: #004D40;
+    --emenutitlebar-bg: #00796B;
+    --emenutitlebar-element-bg-inactive: #009688;
+    --emenutitlebar-element-bg-active: #A7FFEB;
+    --emenu-outer-border: 2px solid var(--border-color);
+    --emenutitlebar-bottom-border: 2px solid var(--border-color);
+    --viewbar-outer-border: 2px solid var(--border-color);
+    --emenu-thumb-scroll: #e6e6e6;
+    --viewbar-right-highlight: cyan;
+    --viewbar-background: color-mix(in srgb, var(--emenutitlebar-bg) 80%, black);
+    --dummy-divider: orange;
+    --searchbox-bg-color: #E0F2F1;
+    --gradient-inner: #AF0404;
+    --gradient-outer: gold;
+    --widget-mouse-over-highlight: transparent;
+    --widget-mouse-over-border: 2px solid white;
+    --widget-mouse-over-border-modifier-down: 2px solid red;
+    --folderbox-element-drag-over: #004d99;
+}
+
+[data-theme="lightblue"] {
+    --border-color: black;
+    --bg-color: #E1F5FE;
+    --text-color-active: black;
+    --text-color-inactive: black;
+    --fmenu-active: #80D8FF;
+    --fmenu-inactive: #03A9F4;
+    --emenutitlebar-bg: #B3E5FC;
+    --emenutitlebar-element-bg-inactive: #81D4FA;
+    --emenutitlebar-element-bg-active: #E1F5FE;
+    --emenu-outer-border: 2px solid var(--border-color);
+    --emenutitlebar-bottom-border: 2px solid var(--border-color);
+    --viewbar-outer-border: 2px solid var(--border-color);
+    --emenu-thumb-scroll: #e6e6e6;
+    --viewbar-right-highlight: cyan;
+    --viewbar-background: color-mix(in srgb, var(--emenutitlebar-bg) 85%, white);
+    --dummy-divider: orange;
+    --searchbox-bg-color: #E0F2F1;
+    --gradient-inner: #0091EA;
+    --gradient-outer: #80D8FF;
+    --widget-mouse-over-highlight: transparent;
+    --widget-mouse-over-border: 2px solid blue;
+    --widget-mouse-over-border-modifier-down: 2px solid red;
+    --folderbox-element-drag-over: #004d99;
+}
+
+[data-theme="oldtheme"] {
+    --border-color: white;
+    --bg-color: black;
+    --text-color-active: black;
+    --text-color-inactive: white;
+    --fmenu-active: gold;
+    --fmenu-inactive: red;
+    --emenutitlebar-bg: #AF0404;
+    --emenutitlebar-element-bg-inactive: #840a01;
+    --emenutitlebar-element-bg-active: #ff9100;
+    --emenu-outer-border: 2px solid var(--border-color);
+    --emenutitlebar-bottom-border: 2px solid var(--border-color);
+    --viewbar-outer-border: 2px solid var(--border-color);
+    --emenu-thumb-scroll: #e6e6e6;
+    --viewbar-right-highlight: lime;
+    --viewbar-background: color-mix(in srgb, var(--emenutitlebar-bg) 50%, black);
+    --dummy-divider: orange;
+    --searchbox-bg-color: wheat;
+    --gradient-inner: #AF0404;
+    --gradient-outer: gold;
+    --widget-mouse-over-highlight: transparent;
+    --widget-mouse-over-border: 2px solid white;
+    --widget-mouse-over-border-modifier-down: 2px solid red;
+    --folderbox-element-drag-over: #004d99;
+}
+
+
 body {
-    font-family: Segoe UI, sans-serif;
+    /* font-family: Segoe UI, sans-serif; */
+    font-family: Trebuchet MS, sans-serif;
     font-size: 1vw;
-    background-color:black;
-    color: white;
+    background-color:var(--bg-color);
+    color: var(--text-color-inactive);
     /* default left and right borders are set to 8px is set 
     to 0 or else menus will clipped left and right by 8px */
     margin: 8px 0 0 0;
@@ -18,15 +149,20 @@ body {
     overflow-x: hidden;
 }
 
-.darkMode {
-    background-color:black;
+/* blinking and styling of dragon bookmark manager :tablink widget */
+.blink {
+    font-variant: small-caps;
+    text-decoration: underline;
+    animation: blink 0.5s step-start 0s infinite;
+    animation-iteration-count: 10;
 }
 
-.lightMode {
-    background-color:#444444;
+@keyframes blink {
+    50% {
+	opacity: 0.0;
+    }
 }
 
- 
 /* hide scrollbars in addition to overflow hidden above */
 html::-webkit-scrollbar, body::-webkit-scrollbar, #dndmenu::-webkit-scrollbar, #my-panel::-webkit-scrollbar {
    display: none;
@@ -34,16 +170,16 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, #dndmenu::-webkit-scrollbar, #
 }
 
 .ViewBar {
-    background: rgba(175, 4, 4, .5);
+    background: var(--viewbar-background);
     display: flex;
     margin: auto;
     width: 90vw;
-    border: 2px solid white;
+    border: var(--viewbar-outer-border);
     justify-content: space-evenly;
 }
 
 .ViewBarButtonContainer {
-    background-color: #840a01;
+    background-color: var(--emenutitlebar-element-bg-inactive);
     position: relative;
     flex: 1;
     display: flex;
@@ -66,7 +202,8 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, #dndmenu::-webkit-scrollbar, #
 }
 
 .Left:hover {
-    background: rgba(255, 0, 0, .5);
+    background: var(--fmenu-inactive);
+    opacity: 0.5;
 }
 
 .Right {
@@ -75,7 +212,8 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, #dndmenu::-webkit-scrollbar, #
 }
 
 .Right:hover {
-    background: rgba(0, 255, 0, .5);
+    background: var(--viewbar-right-highlight);
+    opacity: 0.5;
 }
 
 .ViewButtonTitle {
@@ -92,17 +230,18 @@ a:link, a:visited, a:link:active, a:visited:active {
 }
 
 .Menu {
-  border: 4px solid red 
+  border: 4px solid var(--fmenu-inactive)
 }
 
 .Menu:hover {
-  border: 4px solid gold;
+  border: 4px solid var(--fmenu-active);
 }
 
 .MenuTitleBar {
     cursor: move; 
-    background-color: red;
-    color: white;
+    background-color: var(--fmenu-inactive);
+    color: var(--text-color-inactive);
+    border-bottom: 2px solid --bg-color;
 }
 
 .TitleBarText {
@@ -124,9 +263,8 @@ a:link, a:visited, a:link:active, a:visited:active {
 
 .Menu:hover .MenuTitleBar
 {
-    background-color: gold;
-    color: black;
-
+    background-color: var(--fmenu-active);
+    color: var(--text-color-active);
 } 
 
 
@@ -181,53 +319,90 @@ a:link, a:visited, a:link:active, a:visited:active {
 .MenuPinBtn {
     /* left: 10px;
     top: 3px; */
-    background-color: red;
+    background-color: var(--fmenu-inactive);
     border: 1px solid transparent; 
 
 }
 
 .MenuPinBtn:hover {
     cursor: pointer;
-    background-color: gold;    
+    background-color: var(--fmenu-active);
     border: 1px solid black;
 }
 
 .Menu:hover .MenuPinBtn {
-    background-color: gold;
+    background-color: var(--fmenu-active);
 }
 
 
 .MenuArrowBtn {
     cursor: pointer;
-    background-color: red;
+    background-color: var(--fmenu-inactive);
 }
 .MenuArrowBtn:hover {
     cursor: pointer;
-    background-color: #e6c300 !important;
+    background-color: color-mix(in srgb, var(--fmenu-active) 90%, black) !important; /* #e6c200 instead of #e6c300 */
 }
 .Menu:hover .MenuArrowBtn {
-    background-color: gold;
+    background-color: var(--fmenu-active);
 }
 
 
 
 .MenuCloseBtn {
     cursor: pointer;
-    background-color: brown;
+    background-color: color-mix(in srgb, var(--fmenu-inactive) 70%, black) !important; /* #990000 instead of brown */
 }
 .MenuCloseBtn:hover {
     cursor: pointer;
-    background-color:  #e6c300 !important; 
+    background-color:  color-mix(in srgb, var(--fmenu-active) 90%, black) !important; /* #e6c200 instead of #e6c300 */
 }
 
-.EmbeddedMenuButton, #tabbtn, #historybtn {
-    color: white;
-    cursor: pointer;
-    background-color: #840a01;
+.EmbeddedMenu {
+    background-color: var(--emenutitlebar-bg);
+    border: var(--emenu-outer-border);
+    width: 90vw;
+    margin: auto;
 }
-.EmbeddedMenuButton:hover, #tabbtn:hover, #historybtn:hover {
-    color: black !important;
-    background-color: #ff9100 !important;
+
+.EmbeddedMenuTitleBar {
+    background-color: var(--emenutitlebar-bg);
+    height: 40px;
+    border-bottom: var(--emenutitlebar-bottom-border);
+    cursor: default;
+    user-select: none;
+    display: grid;
+    grid-template-columns: 2fr 3fr 3fr 1fr;
+}
+
+.EmbeddedMenuButton {
+    color: var(--text-color-inactive);
+    cursor: pointer;
+    background-color: var(--emenutitlebar-element-bg-inactive);
+}
+.EmbeddedMenuButton:hover {
+    color: var(--text-color-active) !important;
+    background-color: var(--emenutitlebar-element-bg-active) !important;
+}
+
+.tabbtn-inactive, .historybtn-inactive {
+    color: var(--text-color-inactive);
+    cursor: pointer;
+    background-color: var(--emenutitlebar-element-bg-inactive);
+}
+.tabbtn-inactive:hover, .historybtn-inactive:hover {
+    color: var(--text-color-active) !important;
+    background-color: var(--emenutitlebar-element-bg-active) !important;
+}
+
+.tabbtn-active, .historybtn-active {
+    color: var(--text-color-active);
+    cursor: pointer;
+    background-color: var(--emenutitlebar-element-bg-active);
+}
+.tabbtn-active:hover, .historybtn-active:hover {
+    color: var(--text-color-active) !important;
+    background-color: var(--emenutitlebar-element-bg-active) !important;
 }
 
 .RecentlyModified {
@@ -237,54 +412,64 @@ a:link, a:visited, a:link:active, a:visited:active {
     width: 166px;
     border: 2px solid black;
     outline: none;
-    color: white;
+    color: var(--text-color-inactive);
     cursor: pointer;
-    background-color: #840a01;
+    background-color: var(--emenutitlebar-element-bg-inactive);
 }
 
 .RecentlyModified:hover {
-    color: black; 
-    background-color: #ff9100;
+    color: var(--text-color-active); 
+    background-color: var(--emenutitlebar-element-bg-active);
 }
 
+/* color of recently modified dropdown elements
+   the select option elements defaults to blue 
+   highlight and can't be changed in css  */
 option {
     font-family: Segoe UI, sans-serif;
     font-size: 1vw;
-    color: white;
+    color: var(--text-color-inactive);
     cursor: pointer;
-    background-color: #840a01;
+    background-color: var(--emenutitlebar-element-bg-inactive);
 }
 
-
+/* colors background of area surrounding textinput box */
 #search {
-    background-color: #970c02;
+    /* old color: #970c02 new color same as elements */
+    background-color: var(--emenutitlebar-element-bg-inactive);
     cursor: pointer;
     /* border-radius: 15px; */
 }
 
+#searchBox {
+    background-color: var(--searchbox-bg-color);
+}
+
 #search:hover {
-    background-color: #FF9100;
+    background-color: var(--emenutitlebar-element-bg-active);
     /* rgb(132, 10, 1); */
 }
 
 .search-not-found {
+    /* old text color: wheat */
     cursor: pointer;
-    color: wheat;
+    color: var(--text-color-inactive);
 }
 
 .search-not-found:hover {
-    color: orange;
-    background-color: #AF0404;
+    /* old text color: orange */
+    color: var(--text-color-inactive);
+    background-color: var(--emenutitlebar-bg);
 }
 
 .loadButton {
-    background-color: #840a01;
+    background-color: var(--emenutitlebar-element-bg-inactive);
 
 }
 
 .loadButton:hover {
-    background-color: #FF9100;
-    color: black;
+    background-color: var(--emenutitlebar-element-bg-active);
+    color: var(--text-color-active);
 }
 
 .PlusMinusButton {
@@ -333,30 +518,31 @@ option {
 
 
 .frozen-menu  {
-  border: 4px solid gold;
+  border: 4px solid var(--fmenu-active);
 }
 
 .frozen-menutitlebar
 {
-    background-color: gold;
-    color: black;
+    background-color: var(--fmenu-active);
+    color: var(--text-color-active);
 } 
 
 .frozen-menupinbtn,.frozen-menupinbtn:hover,
 .frozen-MenuArrowBtn,.frozen-MenuArrowBtn:hover {
-    background-color: gold;
+    background-color: var(--fmenu-active);
 }
 
 
 /* On menu fix color of thumb and resizer */
 .frozen-menu .drop-zone-floating::-webkit-scrollbar-thumb
 {
-    background-color: #ccad00; /* color of thumb: same as titlebar: red with gold on hover */
-
+    /* old color: #ccad00 */
+    /* color of thumb: same as titlebar: red with gold on hover */
+    background-color: color-mix(in srgb, var(--fmenu-active) 90%, black); 
 }
 
 .frozen-menu .drop-zone-floating::-webkit-resizer {
-    background: gold;
+    background: var(--fmenu-active);
 }
 
 
@@ -382,6 +568,9 @@ option {
 
     grid-auto-flow: column;
     position: relative; /* so that an empty dropzone can have it's blank element positioned absolutely */
+
+    background-color: var(--bg-color);
+    color: var(--text-color-inactive);
 }
 
 .drop-zone-embedded {
@@ -401,6 +590,9 @@ option {
     grid-auto-flow: column;
 
     position: relative; /* so that an empty dropzone can have it's blank element positioned absolutely */
+
+    background-color: var(--bg-color);
+    color: var(--text-color-inactive);
 }
 /* --------------------------- end drop-zone --------------------------- */
 
@@ -420,33 +612,37 @@ option {
 /* thumb hovering can only occur after menu has been hovered and so is set below */
 .drop-zone-floating::-webkit-scrollbar-thumb
 {
-    background-color: #cc0000; /* color of thumb: same as titlebar: red with gold on hover */
+    /* computes to exactly old color if --fmenu-inactive is red: #cc0000 */
+    /* color of thumb: same as titlebar: red with gold on hover */
+    background-color: color-mix(in srgb, var(--fmenu-inactive) 80%, black) ; 
 
 }
 
 .drop-zone-floating::-webkit-resizer {
-    background: red;
+    background: var(--fmenu-inactive);
 }
 
 
 
-/* Necessary: On menu hover set color of thumb */
+/* Necessary: On menu hover set color of thumb scroller to active color shaded */
 .Menu:hover .drop-zone-floating::-webkit-scrollbar-thumb
 {
-    background-color: #ccad00; /* color of thumb: same as titlebar: red with gold on hover */
+    /* old color #ccad00 new color #ccac00 where --fmenu-active is gold */
+    background-color: color-mix(in srgb, var(--fmenu-active) 80%, black) !important; 
 
 }
 
 .Menu:hover .drop-zone-floating::-webkit-resizer {
-    background: gold;
+    background: var(--fmenu-active);
 }
 
 
-/* Necessary: On menu hover set color of thumb on hover over thumb */
+/* Necessary: On menu hover and hover over thumb scroller set color of thumb scroller 
+              to active color shaded shaded again darker */
 .Menu:hover .drop-zone-floating::-webkit-scrollbar-thumb:hover
 {
-    background-color: #b39800; /* color of thumb: same as titlebar: red with gold on hover */
-
+    /* old color #b39800 new color #b39700 where --fmenu-active is gold */
+    background-color: color-mix(in srgb, var(--fmenu-active) 70%, black) !important; 
 }
 
 
@@ -465,14 +661,15 @@ option {
 
 .drop-zone-embedded::-webkit-scrollbar-thumb
 {
-    background-color: #e6e6e6; /* color of thumb: same as titlebar: red with gold on hover */
+    background-color: var(--emenu-thumb-scroll); 
 
 }
 
 /* On embedded dropzone hover set color of thumb  */
 .drop-zone-embedded::-webkit-scrollbar-thumb:hover
 {
-    background-color: #cccccc; /* color of thumb: same as titlebar: red with gold on hover */
+    /* old color: #cccccc new color #a1a1a1 */
+    background-color: color-mix(in srgb, var(--emenu-thumb-scroll) 70%, black); 
 
 }
 
@@ -505,7 +702,7 @@ option {
 
 
 @keyframes avoid-flicker-disappear {
-  from {background-color: orange;}
+  from {background-color: var(--dummy-divider);}
   to {background-color: transparent;}
 }
 
@@ -524,9 +721,30 @@ option {
     height: 100%;
     width: 100%;
     /* the purpose of the gradient is for the lastincol dummy elements, which extend beyond 4px */
-    background: linear-gradient(to bottom, orange 4px, rgba(0,0,0,0) 4px, rgba(0,0,0,0) 100%);
+    background: linear-gradient(to bottom, var(--dummy-divider) 4px, rgba(0,0,0,0) 4px, rgba(0,0,0,0) 100%);
     /* background-color: orange;    */
 
+}
+
+/* this class applies a gradient if the tablink, historylink, link, or folderbox widget is selected */
+.selected-widget {
+    background-image: radial-gradient(circle at center, var(--gradient-inner) 0%, var(--gradient-outer) 100%);
+}
+
+/* widget border logic :
+cond the contextmenuVisible? and rightclicked? then lock border eg. 2px solid white
+cond selected? then using gradient overwrite to shrink border 
+else transparent, and let hover work as normal */
+.rightclick-lock-border { 
+   border: 2px solid white !important;
+}
+
+.selected-mask-border {
+   border: 2px solid black !important;
+}
+
+.transparent-border {
+   border: 2px solid transparent !important;
 }
 
 /* this class is added to turn off hover highlight in :link, :tablink, and :historylink when dragging is occuring:
@@ -537,22 +755,32 @@ option {
 .link-element {
     height: 100%;
     cursor: default;
+    display: flex;
+    align-items: stretch;
+    box-sizing: border-box;
+    position: relative;
 }
 
 .link-element:not(.no-hover):hover {
     /* !important is to override the :background-color conditional ctrl-click selection highlight which will lock out all background-color settings */
-    border: 2px solid white !important;
+    background-color: var(--widget-mouse-over-highlight);
+    /* you cannot put !important in the css var */
+    border: var(--widget-mouse-over-border) !important;
     cursor: pointer;
-} 
+}
 
 .link-element-modifier-down {
     height: 100%;
     cursor: default;
+    display: flex;
+    align-items: stretch;
+    box-sizing: border-box;
+    position: relative;
 }
 
 .link-element-modifier-down:not(.no-hover):hover {
-    /* !important is to override the :background-color condional ctrl-click selection highlight which will lock out all background-color settings */
-    border: 2px solid red !important;
+    /* you cannot put !important in the css var */
+    border: var(--widget-mouse-over-border-modifier-down) !important;
     cursor: pointer;
 } 
 
@@ -560,29 +788,38 @@ option {
 .folderbox-element {
     height: 100%;
     cursor: default;
+    box-sizing: border-box;
+    display: flex;
+    align-items: stretch;
+    position: relative;    
 }
 
 .folderbox-element:not(.no-hover):hover {
-    /* background-color: darkgrey; */
-    border: 2px solid white !important;
+    background-color: var(--widget-mouse-over-highlight);
+    /* you cannot put !important in the css var */
+    border: var(--widget-mouse-over-border) !important;
     cursor: pointer;
 }
 
 .folderbox-element-modifier-down {
     height: 100%;
     cursor: default;
+    box-sizing: border-box;
+    display: flex;
+    align-items: stretch;
+    position: relative;    
 }
 
 .folderbox-element-modifier-down:not(.no-hover):hover {
-    /* background-color: darkgrey; */
-    border: 2px solid red !important;
+    /* you cannot put !important in the css var */
+    border: var(--widget-mouse-over-border-modifier-down) !important;
     cursor: pointer;
 }
 
 
 .folderbox-element_drag_over {
     cursor: default;
-    background-color: #004d99;
+    background-color: var(--folderbox-element-drag-over);
 }
 
 
@@ -649,6 +886,82 @@ option {
    background-color: #ededed;
    border: 1px solid #ccc;
 }
+
+/* ---------- Tooltip ------------------------------------------------------------------------------------------------------ */
+.tooltip {
+    padding-top: 10px;
+    border-radius: 10px;
+    font-weight: bold;
+    color: white;
+    background-color: black;
+    width: calc(1440px * 0.16);
+}
+.title {
+    padding-left: 10px;
+    padding-right: 10px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* number of lines to show */
+    -webkit-box-orient: vertical;
+}
+.hostname {
+    display: flex;
+    align-items: center;
+    
+    padding-left: 5px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+}
+
+.hostname span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* This container helps the thumbnail behave as if it were an unscaled IMG element */
+.thumbnail-container {
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    width: calc(1440px * 0.16);
+    height: calc(900px * 0.16);
+    overflow: hidden;
+    position: relative;
+    background: #f9f9f9;
+}
+
+/* This is a masking container for the zoomed iframe element */
+.thumbnail {
+  -ms-zoom: 0.16;
+  -moz-transform: scale(0.16);
+  -moz-transform-origin: 0 0;
+  -o-transform: scale(0.16);
+  -o-transform-origin: 0 0;
+  -webkit-transform: scale(0.16);
+  -webkit-transform-origin: 0 0;
+}
+/* This is our screen sizing */
+.thumbnail,
+.thumbnail iframe {
+  width: 1440px;
+  height: 900px;
+}
+/* This facilitates the fade-in transition instead of flicker. It also helps us maintain the illusion that this is an image, since some webpages will have a preloading animation or wait for some images to download */
+.thumbnail iframe {
+  opacity: 1;
+  transition: all 300ms ease-in-out;
+}
+/* This pseudo element masks the iframe, so that mouse wheel scrolling and clicking do not affect the simulated "screenshot" */
+.thumbnail:after {
+  content: "";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
 
 
 /* ---------- Context Menu Styles ------------------------------------------------------------------------------------------ */
